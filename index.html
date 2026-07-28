@@ -197,7 +197,49 @@
             </form>
         </div>
     </div>
+<!-- ================= MODAL NUEVO PEDIDO ================= -->
+    <div id="modal-pedido" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>
+                    <span class="material-symbols-rounded">restaurant_menu</span>
+                    Nuevo Pedido
+                </h3>
+                <button id="modal-pedido-close-x" class="modal-close-btn" aria-label="Cerrar modal">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
 
+            <form id="form-pedido" class="modal-form" novalidate>
+                <div class="form-grid">
+                    <div class="form-group form-group--full">
+                        <label for="ped-mesa">Mesa *</label>
+                        <select id="ped-mesa" required>
+                            <option value="">Seleccionar mesa...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ped-plato">Plato *</label>
+                        <select id="ped-plato" required>
+                            <option value="">Seleccionar plato...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ped-cantidad">Cantidad *</label>
+                        <input type="number" id="ped-cantidad" min="1" value="1" required>
+                    </div>
+                </div>
+                <div id="modal-pedido-error" class="modal-error-msg"></div>
+                <div class="modal-actions">
+                    <button type="button" id="modal-pedido-cancel" class="btn-modal-cancel">Cancelar</button>
+                    <button type="submit" class="btn-modal-save">
+                        <span class="material-symbols-rounded">check_circle</span>
+                        Guardar Pedido
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/modules.js"></script>
