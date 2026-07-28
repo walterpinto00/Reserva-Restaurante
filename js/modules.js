@@ -169,60 +169,109 @@ const UIModule = {
         try {
             const section = document.getElementById('panel-pedidos');
             if (!section) return;
+            const db = StorageModule.getDB();
+            const session = AuthModule.getSession();
+            
+            // Filtrar pedidos que no hayan sido despachados
+            const pedidosActivos = db.pedidos.filter(p => p.estado !== 'despachado');
+            let filas = '';
+
+            if (pedidosActivos.length === 0) {
+                filas = `<tr><td colspan="5"><div class="empty-state"><span class="material-symbols-rounded">skillet</span><p>La cola de cocina está vacía.</p></div></td></tr>`;
+            } else {
+                pedidosActivos.forEach(p => {
+                    const mesaObj = db.mesas.find(m => m.id === p.mesaId);
+                    const platoObj = db.platos.find(pl => pl.id === p.platoId);
+                    
+                    let badge = p.estado === 'pendiente' ? 'pendiente' : p.estado === 'en_preparacion' ? 'preparando' : 'confirmada';
+                    let textoEstado = p.estado.replace('_', ' ').toUpperCase();
+                    
+                    let acciones = '';
+                    // Permisos de Cocina
+                    if (session.rol === 'admin' || session.rol === 'cocina') {
+                        if (p.estado === 'pendiente') {
+                            acciones += `<button class="btn-action" onclick="window.cambiarEstadoPedido('${p.id}', 'en_preparacion')">Empezar a Preparar</button>`;
+                        } else if (p.estado === 'en_preparacion') {
+                            acciones += `<button class="btn-action" onclick="window.cambiarEstadoPedido('${p.id}', 'listo')">Marcar Listo</button>`;
+                        }
+                    }
+                    // Permiso de Mesero/Despacho para enviar platos "Listos"
+                    if ((session.rol === 'admin' || session.rol === 'mesero' || session.rol === 'despacho') && p.estado === 'listo') {
+                        acciones += `<button class="btn-action" onclick="window.crearDespacho('${p.id}')">Enviar a Despacho</button>`;
+                    }
+
+                    filas += `
+                        <tr>
+                            <td style="color:var(--text-muted)">#${p.id.slice(-4)}</td>
+                            <td>Mesa ${mesaObj ? mesaObj.numero : '?'}</td>
+                            <td><strong>${p.cantidad}x</strong> ${platoObj ? platoObj.nombre : '?'}</td>
+                            <td><span class="badge-reserva ${badge}">${textoEstado}</span></td>
+                            <td>${acciones}</td>
+                        </tr>`;
+                });
+            }
+
+            const btnNuevo = (session.rol === 'admin' || session.rol === 'mesero') ? 
+                `<button id="btn-nuevo-pedido" class="btn-new-reserva"><span class="material-symbols-rounded">add_circle</span> Nuevo Pedido</button>` : '';
+
             section.innerHTML = `
-                <h2 class="section-title">Cola de Preparación (Cocina)</h2>
-                <div class="table-container">
-                    <div class="table-scroll">
-                        <table>
-                            <thead>
-                                <tr><th>Nº ORDEN</th><th>MESA</th><th>PLATOS SOLICITADOS</th><th>ESTADO</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="4">
-                                    <div class="empty-state">
-                                        <span class="material-symbols-rounded">skillet</span>
-                                        <p>La cola de cocina está vacía.</p>
-                                    </div>
-                                </td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="panel-toolbar">
+                    <h2 class="section-title">Cola de Preparación</h2>
+                    ${btnNuevo}
                 </div>
-            `;
-        } catch (err) {
-            console.error('Error al renderizar pedidos:', err);
-        }
+                <div class="table-container"><div class="table-scroll"><table>
+                    <thead><tr><th>ORDEN</th><th>MESA</th><th>PEDIDO</th><th>ESTADO</th><th>ACCIONES</th></tr></thead>
+                    <tbody>${filas}</tbody>
+                </table></div></div>`;
+
+            if (document.getElementById('btn-nuevo-pedido')) {
+                document.getElementById('btn-nuevo-pedido').addEventListener('click', () => {
+                    document.dispatchEvent(new CustomEvent('abrirModalPedido'));
+                });
+            }
+        } catch (err) { console.error('Error al renderizar pedidos:', err); }
     },
 
-    // Cumple requerimiento de Despacho: Entregas
     renderDespachos() {
         try {
             const section = document.getElementById('panel-despachos');
             if (!section) return;
+            const db = StorageModule.getDB();
+            const session = AuthModule.getSession();
+            let filas = '';
+            
+            if (db.despachos.length === 0) {
+                filas = `<tr><td colspan="5"><div class="empty-state"><span class="material-symbols-rounded">moped</span><p>No hay despachos registrados.</p></div></td></tr>`;
+            } else {
+                db.despachos.forEach(d => {
+                    let badge = d.estado === 'en_ruta' ? 'pendiente' : 'confirmada';
+                    let textoEstado = d.estado.replace('_', ' ').toUpperCase();
+                    let acciones = '';
+                    
+                    if ((session.rol === 'admin' || session.rol === 'despacho') && d.estado === 'en_ruta') {
+                        acciones = `<button class="btn-action" onclick="window.entregarDespacho('${d.id}')">Marcar Entregado</button>`;
+                    }
+
+                    filas += `
+                        <tr>
+                            <td style="color:var(--text-muted)">#${d.id.slice(-4)}</td>
+                            <td>Ref Pedido #${d.pedidoId.slice(-4)}</td>
+                            <td>Mesa ${d.mesaNumero}</td>
+                            <td><span class="badge-reserva ${badge}">${textoEstado}</span></td>
+                            <td>${acciones}</td>
+                        </tr>`;
+                });
+            }
+
             section.innerHTML = `
-                <h2 class="section-title">Logística de Despachos</h2>
-                <div class="table-container">
-                    <div class="table-scroll">
-                        <table>
-                            <thead>
-                                <tr><th>ID DESPACHO</th><th>ORIGEN</th><th>DESTINO</th><th>ESTADO ENTREGA</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="4">
-                                    <div class="empty-state">
-                                        <span class="material-symbols-rounded">moped</span>
-                                        <p>No hay despachos en ruta.</p>
-                                    </div>
-                                </td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        } catch (err) {
-            console.error('Error al renderizar despachos:', err);
-        }
+                <div class="panel-toolbar"><h2 class="section-title">Logística de Despachos</h2></div>
+                <div class="table-container"><div class="table-scroll"><table>
+                    <thead><tr><th>DESPACHO</th><th>ORIGEN</th><th>DESTINO</th><th>ESTADO</th><th>ACCIONES</th></tr></thead>
+                    <tbody>${filas}</tbody>
+                </table></div></div>`;
+        } catch (err) { console.error('Error al renderizar despachos:', err); }
     },
+    
 
     renderUsuarios() {
         try {
