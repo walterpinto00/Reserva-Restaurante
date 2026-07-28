@@ -250,6 +250,95 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+// ── Flujo Modal Pedidos ────────────────────────────────────────────────
+    const modalPedido = document.getElementById('modal-pedido');
+    const formPedido  = document.getElementById('form-pedido');
+    const selPedMesa  = document.getElementById('ped-mesa');
+    const selPedPlato = document.getElementById('ped-plato');
 
+    document.addEventListener('abrirModalPedido', () => {
+        if (!modalPedido) return;
+        formPedido.reset();
+        document.getElementById('modal-pedido-error').textContent = '';
+        const db = StorageModule.getDB();
+        
+        // Llenar selects
+        selPedMesa.innerHTML = '<option value="">Seleccionar mesa...</option>';
+        db.mesas.forEach(m => selPedMesa.innerHTML += `<option value="${m.id}">Mesa ${m.numero}</option>`);
+
+        selPedPlato.innerHTML = '<option value="">Seleccionar plato...</option>';
+        db.platos.forEach(p => selPedPlato.innerHTML += `<option value="${p.id}">${p.nombre} ($${p.precio}) - ${p.categoria}</option>`);
+
+        modalPedido.classList.remove('hidden');
+    });
+
+    const cerrarModalPedido = () => modalPedido.classList.add('hidden');
+    if (document.getElementById('modal-pedido-close-x')) document.getElementById('modal-pedido-close-x').addEventListener('click', cerrarModalPedido);
+    if (document.getElementById('modal-pedido-cancel')) document.getElementById('modal-pedido-cancel').addEventListener('click', cerrarModalPedido);
+
+    if (formPedido) {
+        formPedido.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const mesaId = selPedMesa.value;
+            const platoId = selPedPlato.value;
+            const cantidad = parseInt(document.getElementById('ped-cantidad').value, 10);
+
+            if (!mesaId || !platoId || cantidad < 1) {
+                document.getElementById('modal-pedido-error').textContent = '⚠️ Selecciona mesa, plato y cantidad válida.';
+                return;
+            }
+
+            const db = StorageModule.getDB();
+            db.pedidos.push({
+                id: 'p' + Date.now(),
+                mesaId, platoId, cantidad,
+                estado: 'pendiente'
+            });
+            StorageModule.saveDB(db);
+            cerrarModalPedido();
+            UIModule.renderPedidos();
+            UIModule.renderDashboardStats();
+        });
+    }
+
+    // ── Funciones Globales para Cambios de Estado (Cocina / Despacho) ──────
+    window.cambiarEstadoPedido = (id, nuevoEstado) => {
+        const db = StorageModule.getDB();
+        const pedido = db.pedidos.find(p => p.id === id);
+        if (pedido) {
+            pedido.estado = nuevoEstado;
+            StorageModule.saveDB(db);
+            UIModule.renderPedidos();
+        }
+    };
+
+    window.crearDespacho = (pedidoId) => {
+        const db = StorageModule.getDB();
+        const pedido = db.pedidos.find(p => p.id === pedidoId);
+        if (pedido) {
+            pedido.estado = 'despachado'; // Se oculta de cocina
+            const mesaObj = db.mesas.find(m => m.id === pedido.mesaId);
+            db.despachos.push({
+                id: 'd' + Date.now(),
+                pedidoId: pedido.id,
+                mesaNumero: mesaObj ? mesaObj.numero : 'X',
+                estado: 'en_ruta'
+            });
+            StorageModule.saveDB(db);
+            UIModule.renderPedidos();
+            UIModule.renderDespachos();
+            UIModule.renderDashboardStats();
+        }
+    };
+
+    window.entregarDespacho = (despachoId) => {
+        const db = StorageModule.getDB();
+        const despacho = db.despachos.find(d => d.id === despachoId);
+        if (despacho) {
+            despacho.estado = 'entregado';
+            StorageModule.saveDB(db);
+            UIModule.renderDespachos();
+        }
+    };
     initApp();
 });
