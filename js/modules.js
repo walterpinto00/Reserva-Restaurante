@@ -126,7 +126,12 @@ const UIModule = {
 
             section.innerHTML = `
                 <div class="panel-toolbar">
-                    <h2 class="section-title">Control de Reservas</h2>
+                    <h2 class="section-title">
+                        <div class="section-title-icon">
+                            <span class="material-symbols-rounded">edit_calendar</span>
+                        </div>
+                        Control de Reservas
+                    </h2>
                     <button id="btn-nueva-reserva" class="btn-new-reserva">
                         <span class="material-symbols-rounded">add_circle</span>
                         Nueva Reserva
@@ -218,7 +223,12 @@ const UIModule = {
 
             section.innerHTML = `
                 <div class="panel-toolbar">
-                    <h2 class="section-title">Cola de Preparación</h2>
+                    <h2 class="section-title">
+                        <div class="section-title-icon">
+                            <span class="material-symbols-rounded">skillet</span>
+                        </div>
+                        Cola de Preparación
+                    </h2>
                     ${btnNuevo}
                 </div>
                 <div class="table-container"><div class="table-scroll"><table>
@@ -266,7 +276,14 @@ const UIModule = {
             }
 
             section.innerHTML = `
-                <div class="panel-toolbar"><h2 class="section-title">Logística de Despachos</h2></div>
+                <div class="panel-toolbar">
+                    <h2 class="section-title">
+                        <div class="section-title-icon">
+                            <span class="material-symbols-rounded">moped</span>
+                        </div>
+                        Logística de Despachos
+                    </h2>
+                </div>
                 <div class="table-container"><div class="table-scroll"><table>
                     <thead><tr><th>DESPACHO</th><th>ORIGEN</th><th>DESTINO</th><th>ESTADO</th><th>ACCIONES</th></tr></thead>
                     <tbody>${filas}</tbody>
@@ -297,7 +314,12 @@ const UIModule = {
 
             section.innerHTML = `
                 <div class="panel-toolbar">
-                    <h2 class="section-title">Gestión de Usuarios</h2>
+                    <h2 class="section-title">
+                        <div class="section-title-icon">
+                            <span class="material-symbols-rounded">admin_panel_settings</span>
+                        </div>
+                        Gestión de Usuarios
+                    </h2>
                     <button id="btn-reset-db" class="btn-danger">Restaurar BD Inicial</button>
                 </div>
                 <div class="table-container">
