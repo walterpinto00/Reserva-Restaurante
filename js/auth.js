@@ -120,6 +120,50 @@ const AuthModule = {
     },
 
     // ══════════════════════════════════════════════════════════════════════════
+    //  VALIDACIÓN DE ENTRADAS — Prevención XSS e Inyección
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Valida que una cadena NO contenga caracteres peligrosos.
+     *
+     * BLOQUEADOS: " ' * < > ; & | \ / ` ~ { } ( ) [ ] % + = ! # ^ @
+     * PERMITIDOS: letras (a-z, A-Z, vocales con tilde, ñ), números, punto, guion, _
+     *
+     * @param  {string} valor  — texto a validar
+     * @param  {string} campo  — nombre del campo (para el mensaje de error)
+     * @returns {{ ok: boolean, error?: string }}
+     */
+    validarEntrada(valor, campo) {
+        // ── Lista de caracteres explícitamente prohibidos ──
+        const PROHIBIDOS = /["'*<>;,&|\\`~{}()\[\]%+=!#^@/]/;
+
+        // ── Longitud mínima y máxima ──
+        const MIN = 3;
+        const MAX = 50;
+
+        if (!valor || valor.trim().length === 0) {
+            return { ok: false, error: `El campo "${campo}" no puede estar vacío.` };
+        }
+        if (valor.length < MIN) {
+            return { ok: false, error: `"${campo}" debe tener al menos ${MIN} caracteres.` };
+        }
+        if (valor.length > MAX) {
+            return { ok: false, error: `"${campo}" no puede superar los ${MAX} caracteres.` };
+        }
+        if (PROHIBIDOS.test(valor)) {
+            // Identifica cuál fue el carácter problemático para informar al usuario
+            const charEncontrado = valor.split('').find(c => PROHIBIDOS.test(c));
+            return {
+                ok: false,
+                error: `"${campo}" contiene un carácter no permitido: ${charEncontrado}  ` +
+                       `(No se permiten: " ' * < > ; & | \\ / etc.)`
+            };
+        }
+
+        return { ok: true };
+    },
+
+    // ══════════════════════════════════════════════════════════════════════════
     //  HASH DE CONTRASEÑA
     // ══════════════════════════════════════════════════════════════════════════
 
@@ -148,9 +192,12 @@ const AuthModule = {
      */
     login(username, password) {
         try {
-            if (!username || !password) {
-                return { ok: false, error: 'Usuario y contraseña son obligatorios.' };
-            }
+            // ── 1. Validar caracteres peligrosos ANTES de cualquier proceso ──
+            const validUser = this.validarEntrada(username, 'Usuario');
+            if (!validUser.ok) return { ok: false, error: validUser.error };
+
+            const validPass = this.validarEntrada(password, 'Contraseña');
+            if (!validPass.ok) return { ok: false, error: validPass.error };
 
             const db = StorageModule.getDB();
             const expectedHash = this.hashPassword(username + '123');
