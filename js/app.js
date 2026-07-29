@@ -146,29 +146,42 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (modalError) modalError.textContent = '';
 
+            // ── Validación estilo instructor: alert + return false ──────────
+            if (!validarReserva()) return;
+
             try {
                 const cliente    = document.getElementById('res-cliente')?.value.trim()       || '';
                 const mesaId     = document.getElementById('res-mesa')?.value                 || '';
                 const fecha      = document.getElementById('res-fecha')?.value                || '';
                 const hora       = document.getElementById('res-hora')?.value                 || '';
-                const comensales = parseInt(document.getElementById('res-comensales')?.value, 10) || 0;
+                const comensales = document.getElementById('res-comensales')?.value           || '';
                 const notas      = document.getElementById('res-notas')?.value.trim()         || '';
 
-                // Validaciones
-                if (!cliente)        throw new Error('El nombre del cliente es obligatorio.');
-                if (!mesaId)         throw new Error('Debes seleccionar una mesa.');
-                if (!fecha)          throw new Error('La fecha es obligatoria.');
-                if (!hora)           throw new Error('La hora es obligatoria.');
-                if (comensales < 1)  throw new Error('Indica al menos 1 comensal.');
+                // ── Validaciones con ValidacionModule ──────────────────────
+                const vCliente = ValidacionModule.validarTexto(cliente, 'Nombre del cliente', { min: 2, max: 80 });
+                if (!vCliente.ok) throw new Error(vCliente.error);
+
+                if (!mesaId) throw new Error('Debes seleccionar una mesa.');
+
+                const vFecha = ValidacionModule.validarFecha(fecha, 'Fecha de reserva');
+                if (!vFecha.ok) throw new Error(vFecha.error);
+
+                if (!hora) throw new Error('La hora es obligatoria.');
+
+                const vComensales = ValidacionModule.validarEntero(comensales, 'Comensales', { min: 1, max: 50 });
+                if (!vComensales.ok) throw new Error(vComensales.error);
+
+                // Notas son opcionales, pero si se llenan se sanitizan
+                const notasLimpias = notas ? ValidacionModule.sanitizar(notas) : '';
 
                 const nuevaReserva = {
                     id:        'r' + Date.now(),
-                    cliente,
+                    cliente:   ValidacionModule.sanitizar(cliente),
                     mesaId,
                     fecha,
                     hora,
-                    comensales,
-                    notas,
+                    comensales: parseInt(comensales, 10),
+                    notas:     notasLimpias,
                     estado:    'pendiente',
                     creadoEn:  new Date().toISOString()
                 };
@@ -221,11 +234,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Login ──────────────────────────────────────────────────────────────
     btnLogin.addEventListener('click', () => {
+        // ── Validación del instructor: primero revisa caracteres y vacíos ──
+        if (!validarLogin()) return; // Si retorna false, muestra alert y para
+
         const user = inputUser.value.trim();
         const pass = inputPass.value.trim();
 
         errorMsg.textContent = '';
-        if (!user || !pass) { errorMsg.textContent = 'Completa todos los campos.'; return; }
 
         try {
             btnLogin.textContent = 'Verificando...';
