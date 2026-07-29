@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="ReservaRest: Sistema de gestión de reservas, mesas, pedidos y despachos para restaurantes. Proyecto ADSO SENA.">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#030712">
     <title>ReservaRest | Sistema ADSO</title>
     <link rel="stylesheet" href="css/styles.css">
-    <!-- Fuentes tecnológicas y modernas -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 </head>
 <body>
 
-    <!-- ================= VISTA LOGIN ================= -->
+    <!-- ═══════════════ VISTA LOGIN ═══════════════ -->
     <div id="view-login" class="login-container active">
+        <!-- Fondo con grid sutil -->
+        <div class="login-grid-bg"></div>
+
         <div class="glass-box">
             <div class="login-header">
                 <div class="icon-glow">
@@ -23,26 +24,28 @@
                 <h1>ReservaRest</h1>
                 <p>Plataforma de Gestión Gastronómica</p>
             </div>
-            
+
+            <div class="login-divider">Acceso al sistema</div>
+
             <div class="login-form">
                 <div class="input-group">
-                    <span class="material-symbols-rounded">alternate_email</span>
-                    <input type="text" id="login-user" placeholder="Usuario" autocomplete="off">
+                    <span class="material-symbols-rounded">person</span>
+                    <input type="text" id="login-user" placeholder="Nombre de usuario" autocomplete="off">
                 </div>
                 <div class="input-group">
                     <span class="material-symbols-rounded">lock</span>
                     <input type="password" id="login-pass" placeholder="Contraseña">
                 </div>
-                
+
                 <div id="login-error" class="error-msg"></div>
-                
+
                 <button id="btn-login" class="btn-neon">
-                    ACCEDER AL SISTEMA
+                    Iniciar Sesión
                 </button>
             </div>
-            
+
             <div class="login-demo-info">
-                <p>Credenciales de prueba:</p>
+                <p>Credenciales de prueba</p>
                 <div class="demo-tags">
                     <span>admin / admin123</span>
                     <span>mesero / mesero123</span>
@@ -53,27 +56,31 @@
         </div>
     </div>
 
-    <!-- ================= VISTA DASHBOARD ================= -->
+    <!-- ═══════════════ VISTA DASHBOARD ═══════════════ -->
     <div id="view-dashboard" class="dashboard-container hidden">
-        
-        <!-- Overlay para cerrar sidebar en móvil -->
+
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <!-- Menú Lateral -->
         <aside class="sidebar" id="sidebar">
             <div class="brand">
-                <span class="material-symbols-rounded text-neon">restaurant_menu</span>
-                <h2>ReservaRest</h2>
+                <div class="brand-icon">
+                    <span class="material-symbols-rounded">restaurant_menu</span>
+                </div>
+                <div class="brand-text">
+                    <h2>ReservaRest</h2>
+                    <small>ADSO · SENA 2026</small>
+                </div>
             </div>
-            
+
             <nav class="nav-menu">
-                <p class="nav-subtitle">OPERACIONES</p>
-                
+                <p class="nav-subtitle">Operaciones</p>
+
                 <button class="nav-item active" data-target="panel-inicio" data-roles="admin,mesero,cocina,despacho">
                     <span class="material-symbols-rounded">grid_view</span> Panel Principal
                 </button>
                 <button class="nav-item" data-target="panel-mesas" data-roles="admin,mesero">
-                    <span class="material-symbols-rounded">table_bar</span> Estado Mesas
+                    <span class="material-symbols-rounded">table_bar</span> Estado de Mesas
                 </button>
                 <button class="nav-item" data-target="panel-reservas" data-roles="admin,mesero">
                     <span class="material-symbols-rounded">edit_calendar</span> Reservas
@@ -84,34 +91,41 @@
                 <button class="nav-item" data-target="panel-despachos" data-roles="admin,mesero,despacho">
                     <span class="material-symbols-rounded">moped</span> Despachos
                 </button>
-                
-                <p class="nav-subtitle" style="margin-top: 20px;">SISTEMA</p>
+
+                <p class="nav-subtitle">Sistema</p>
                 <button class="nav-item" data-target="panel-usuarios" data-roles="admin">
                     <span class="material-symbols-rounded">admin_panel_settings</span> Usuarios
                 </button>
             </nav>
 
-            <!-- Footer del sidebar -->
             <div class="sidebar-footer">
-                <span class="material-symbols-rounded">verified_user</span>
-                <span>localStorage · Cifrado XOR</span>
+                <div class="footer-dot"></div>
+                <div class="footer-text">
+                    <strong>Conexión segura</strong>
+                    localStorage · XOR + JWT
+                </div>
             </div>
         </aside>
 
         <div class="main-wrapper">
             <!-- Barra Superior -->
             <header class="topbar">
-                <!-- Hamburguesa (visible solo en móvil) -->
-                <button id="btn-menu-toggle" class="btn-hamburger" aria-label="Abrir menú">
-                    <span class="material-symbols-rounded">menu</span>
-                </button>
-
-                <div class="date-badge">
-                    <span class="material-symbols-rounded">today</span>
-                    <span id="current-date"></span>
+                <div class="topbar-left">
+                    <button id="btn-menu-toggle" class="btn-hamburger" aria-label="Abrir menú">
+                        <span class="material-symbols-rounded">menu</span>
+                    </button>
+                    <div class="date-badge">
+                        <span class="material-symbols-rounded">calendar_today</span>
+                        <span id="current-date"></span>
+                    </div>
+                    <div class="topbar-search">
+                        <span class="material-symbols-rounded">search</span>
+                        Sistema de gestión activo
+                    </div>
                 </div>
-                
+
                 <div class="user-profile">
+                    <div class="user-avatar" id="user-avatar-initials">A</div>
                     <div class="user-text">
                         <span id="user-name-display" class="name">Cargando...</span>
                         <span id="user-role-badge" class="role-badge">ROL</span>
@@ -124,33 +138,45 @@
 
             <!-- Áreas de Contenido -->
             <main class="content-area">
+
                 <section id="panel-inicio" class="panel-section active">
-                    <h2 class="section-title">Dashboard Analítico</h2>
+                    <h2 class="section-title">
+                        <div class="section-title-icon">
+                            <span class="material-symbols-rounded">grid_view</span>
+                        </div>
+                        Dashboard Analítico
+                    </h2>
                     <div class="stats-grid" id="stats-container"></div>
                 </section>
 
                 <section id="panel-mesas" class="panel-section hidden">
-                    <h2 class="section-title">Mapa de Mesas</h2>
+                    <h2 class="section-title">
+                        <div class="section-title-icon">
+                            <span class="material-symbols-rounded">table_bar</span>
+                        </div>
+                        Mapa de Mesas
+                    </h2>
                     <div class="mesas-grid" id="mesas-container"></div>
                 </section>
 
-                <section id="panel-reservas" class="panel-section hidden"></section>
-                <section id="panel-pedidos" class="panel-section hidden"></section>
+                <section id="panel-reservas"  class="panel-section hidden"></section>
+                <section id="panel-pedidos"   class="panel-section hidden"></section>
                 <section id="panel-despachos" class="panel-section hidden"></section>
-                <section id="panel-usuarios" class="panel-section hidden"></section>
+                <section id="panel-usuarios"  class="panel-section hidden"></section>
+
             </main>
         </div>
     </div>
 
-    <!-- ================= MODAL NUEVA RESERVA ================= -->
-    <div id="modal-reserva" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <!-- ═══════════════ MODAL NUEVA RESERVA ═══════════════ -->
+    <div id="modal-reserva" class="modal-overlay hidden" role="dialog" aria-modal="true">
         <div class="modal-box">
             <div class="modal-header">
-                <h3 id="modal-title">
+                <h3>
                     <span class="material-symbols-rounded">edit_calendar</span>
                     Nueva Reserva
                 </h3>
-                <button id="modal-close-x" class="modal-close-btn" aria-label="Cerrar modal">
+                <button id="modal-close-x" class="modal-close-btn" aria-label="Cerrar">
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
@@ -189,7 +215,7 @@
 
                 <div class="modal-actions">
                     <button type="button" id="modal-cancel" class="btn-modal-cancel">Cancelar</button>
-                    <button type="submit" id="modal-save" class="btn-modal-save">
+                    <button type="submit" class="btn-modal-save">
                         <span class="material-symbols-rounded">check_circle</span>
                         Confirmar Reserva
                     </button>
@@ -197,7 +223,8 @@
             </form>
         </div>
     </div>
-<!-- ================= MODAL NUEVO PEDIDO ================= -->
+
+    <!-- ═══════════════ MODAL NUEVO PEDIDO ═══════════════ -->
     <div id="modal-pedido" class="modal-overlay hidden" role="dialog" aria-modal="true">
         <div class="modal-box">
             <div class="modal-header">
@@ -205,7 +232,7 @@
                     <span class="material-symbols-rounded">restaurant_menu</span>
                     Nuevo Pedido
                 </h3>
-                <button id="modal-pedido-close-x" class="modal-close-btn" aria-label="Cerrar modal">
+                <button id="modal-pedido-close-x" class="modal-close-btn" aria-label="Cerrar">
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
@@ -240,6 +267,7 @@
             </form>
         </div>
     </div>
+
     <script src="js/storage.js"></script>
     <script src="js/validaciones.js"></script>
     <script src="js/auth.js"></script>

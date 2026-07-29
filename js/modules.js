@@ -18,29 +18,35 @@ const UIModule = {
             const container = document.getElementById('stats-container');
             if (!container) return;
             const db = StorageModule.getDB();
+            const mesasOcupadas = db.mesas.filter(m => m.estado === 'ocupada').length;
 
             container.innerHTML = `
-                <div class="stat-card">
-                    <h3><span class="material-symbols-rounded">calendar_month</span> ${db.reservas.length}</h3>
-                    <p>Reservas Activas</p>
+                <div class="stat-card blue">
+                    <div class="stat-icon"><span class="material-symbols-rounded">edit_calendar</span></div>
+                    <div class="stat-value">${db.reservas.length}</div>
+                    <div class="stat-label">Reservas Activas</div>
                 </div>
-                <div class="stat-card">
-                    <h3><span class="material-symbols-rounded">skillet</span> ${db.pedidos.length}</h3>
-                    <p>Platos en Cola</p>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><span class="material-symbols-rounded">skillet</span></div>
+                    <div class="stat-value">${db.pedidos.length}</div>
+                    <div class="stat-label">Platos en Cola</div>
                 </div>
-                <div class="stat-card">
-                    <h3><span class="material-symbols-rounded">moped</span> ${db.despachos.length}</h3>
-                    <p>Despachos</p>
+                <div class="stat-card cyan">
+                    <div class="stat-icon"><span class="material-symbols-rounded">moped</span></div>
+                    <div class="stat-value">${db.despachos.length}</div>
+                    <div class="stat-label">Despachos</div>
                 </div>
-                <div class="stat-card">
-                    <h3><span class="material-symbols-rounded">table_bar</span> ${db.mesas.filter(m => m.estado === 'ocupada').length}</h3>
-                    <p>Mesas Ocupadas</p>
+                <div class="stat-card green">
+                    <div class="stat-icon"><span class="material-symbols-rounded">table_bar</span></div>
+                    <div class="stat-value">${mesasOcupadas}</div>
+                    <div class="stat-label">Mesas Ocupadas</div>
                 </div>
             `;
         } catch (err) {
             console.error('Error al renderizar estadísticas:', err);
         }
     },
+
 
     renderMesas() {
         try {
@@ -50,24 +56,19 @@ const UIModule = {
             container.innerHTML = '';
 
             db.mesas.forEach(mesa => {
-                const color = mesa.estado === 'disponible'
-                    ? 'var(--success)'
-                    : mesa.estado === 'ocupada'
-                        ? 'var(--danger)'
-                        : 'var(--warning)';
-                const bg = mesa.estado === 'disponible'
-                    ? 'rgba(16, 185, 129, 0.12)'
-                    : mesa.estado === 'ocupada'
-                        ? 'rgba(239, 68, 68, 0.12)'
-                        : 'rgba(245, 158, 11, 0.12)';
+                const estadoClass = mesa.estado === 'disponible' ? 'disponible'
+                    : mesa.estado === 'ocupada' ? 'ocupada' : 'reservada';
 
                 container.innerHTML += `
-                    <div class="mesa-card" style="border-top: 3px solid ${color}">
-                        <span class="material-symbols-rounded mesa-icon">table_restaurant</span>
+                    <div class="mesa-card">
+                        <div class="mesa-icon">
+                            <span class="material-symbols-rounded">table_restaurant</span>
+                        </div>
                         <h3>Mesa ${mesa.numero}</h3>
-                        <p>${mesa.capacidad} pax · ${mesa.zona}</p>
-                        <span class="badge-status" style="color: ${color}; background: ${bg}">
-                            ${mesa.estado.toUpperCase()}
+                        <p class="mesa-zona">${mesa.zona}</p>
+                        <p class="mesa-cap">${mesa.capacidad} comensales</p>
+                        <span class="badge-status ${estadoClass}">
+                            ${mesa.estado.charAt(0).toUpperCase() + mesa.estado.slice(1)}
                         </span>
                     </div>
                 `;
@@ -76,6 +77,7 @@ const UIModule = {
             console.error('Error al renderizar mesas:', err);
         }
     },
+
 
     // =====================================================
     //  RESERVAS — Flujo completo con datos reales
