@@ -29,6 +29,42 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnMenuToggle)  btnMenuToggle.addEventListener('click', toggleSidebar);
     if (sidebarOverlay) sidebarOverlay.addEventListener('click', cerrarSidebar);
 
+    // ── Validación visual en tiempo real (login) ───────────────────────────
+    /**
+     * Revisa mientras el usuario escribe si hay caracteres prohibidos.
+     * Pinta el borde del campo en rojo y muestra un aviso inmediato.
+     */
+    function validacionEnVivo(inputEl) {
+        if (!inputEl) return;
+
+        inputEl.addEventListener('input', () => {
+            const valor = inputEl.value;
+
+            // Usar la misma función de auth.js para coherencia
+            const resultado = AuthModule.validarEntrada(valor, inputEl.placeholder || 'Campo');
+
+            if (!resultado.ok && valor.length > 0) {
+                // ── Campo inválido: borde rojo + mensaje de aviso ──
+                inputEl.style.borderColor    = 'var(--danger)';
+                inputEl.style.boxShadow      = '0 0 0 3px rgba(239, 68, 68, 0.25)';
+                if (errorMsg) {
+                    errorMsg.textContent = '⛔ ' + resultado.error;
+                    errorMsg.style.color = 'var(--danger)';
+                }
+            } else {
+                // ── Campo válido: restaurar estilos ──
+                inputEl.style.borderColor = '';
+                inputEl.style.boxShadow   = '';
+                if (errorMsg && errorMsg.textContent.startsWith('⛔')) {
+                    errorMsg.textContent = '';
+                }
+            }
+        });
+    }
+
+    validacionEnVivo(inputUser);
+    validacionEnVivo(inputPass);
+
 
     // ── Modal de Nueva Reserva ─────────────────────────────────────────────
     const modalReserva = document.getElementById('modal-reserva');
