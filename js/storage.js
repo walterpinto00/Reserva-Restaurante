@@ -121,4 +121,4 @@ const StorageModule = {
         localStorage.removeItem(DB_KEY);
         this.initDemoDB();
     }
-};
+};//revison
