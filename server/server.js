@@ -143,14 +143,37 @@ app.get('/api/ping', (req, res) => {
 });
 
 // Aplicamos loginLimiter SOLO a esta ruta
-app.post('/api/auth/login', loginLimiter, (req, res) => {
-    const { username, password } = req.body;
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
+    const { username, password, recaptchaToken } = req.body;
 
-    if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+    if (!username || !password || !recaptchaToken) {
+        return res.status(400).json({ error: 'Faltan credenciales o no se completó el CAPTCHA' });
+    }
 
+    // 1. Validar Google reCAPTCHA
+    try {
+        const secretKey = process.env.RECAPTCHA_SECRET_KEY || 'TU_CLAVE_SECRETA_RECAPTCHA';
+        const recaptchaUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
+        
+        const googleRes = await fetch(recaptchaUrl, { method: 'POST' });
+        const googleData = await googleRes.json();
+
+        if (!googleData.success) {
+            console.error('Fallo en reCAPTCHA:', googleData['error-codes']);
+            return res.status(401).json({ error: 'Validación reCAPTCHA fallida. ¿Eres un bot?' });
+        }
+    } catch (err) {
+        console.error('Error al contactar con Google reCAPTCHA:', err);
+        return res.status(500).json({ error: 'Error interno verificando seguridad' });
+    }
+
+    // 2. Validar Usuario (Base de datos en memoria para el ejercicio)
     const user = USUARIOS.find(u => u.username === username.trim());
-    if (!user || user.password !== password) return res.status(401).json({ error: 'Credenciales incorrectas' });
+    if (!user || user.password !== password) {
+        return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
 
+    // 3. Crear sesión segura
     const sessionId = generarSessionId();
     const expiry    = new Date(Date.now() + 60 * 60 * 1000);
 
