@@ -1,8 +1,9 @@
 // js/auth.js — Autenticación con tokens tipo JWT (header.payload.firma)
 // + Sincronización con Cookie HTTP-Only del servidor cuando está disponible
 
-const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hora
+const TOKEN_EXPIRY_MS = 3 * 60 * 1000; // 3 minutos
 const SERVER_URL      = 'http://localhost:4000';
+let sessionTimer = null;
 
 const AuthModule = {
 
@@ -183,21 +184,40 @@ const AuthModule = {
         }
     },
 
-    // Leer y verificar sesión activa desde localStorage
+    // ── Obtener sesión activa (valida firma y fecha de expiración) ────────────
     getSession() {
         try {
             const token = localStorage.getItem(SESSION_KEY);
             if (!token) return null;
-            return this._verificarToken(token);
-        } catch (err) {
-            console.warn('Sesión rechazada:', err.message);
-            localStorage.removeItem(SESSION_KEY);
-            const dashboard = document.getElementById('view-dashboard');
-            if (dashboard && !dashboard.classList.contains('hidden')) {
-                window.location.reload();
+
+            const payload = this._verificarToken(token);
+            if (Date.now() > payload.exp) {
+                console.warn('Sesión expirada.');
+                localStorage.removeItem(SESSION_KEY);
+                return null;
             }
+
+            // Iniciar o reiniciar temporizador para cierre de sesión automático
+            this._iniciarTemporizadorExpiracion(payload.exp - Date.now());
+
+            return payload;
+        } catch (err) {
+            console.error('Token inválido:', err.message);
+            localStorage.removeItem(SESSION_KEY);
             return null;
         }
+    },
+
+    // Inicia un contador para cerrar la sesión a los 3 minutos
+    _iniciarTemporizadorExpiracion(tiempoRestante) {
+        if (sessionTimer) clearTimeout(sessionTimer);
+        
+        sessionTimer = setTimeout(() => {
+            alert("Tu sesión ha expirado por inactividad (3 minutos).");
+            this.logout().then(() => {
+                location.reload();
+            });
+        }, tiempoRestante > 0 ? tiempoRestante : 0);
     },
 
     // Mostrar nombre/rol y ocultar menús según el rol del usuario

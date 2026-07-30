@@ -113,6 +113,7 @@ app.use(express.static(path.join(__dirname, '..')));
 
 // ── Store en memoria para sesiones activas (en prod. usar Redis) ─────────────
 const sesionesActivas = new Map();
+const intentosFallidos = new Map();
 
 function generarSessionId() {
     return crypto.randomBytes(32).toString('hex');
@@ -150,7 +151,13 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         return res.status(400).json({ error: 'Faltan credenciales o no se completó el CAPTCHA' });
     }
 
-    // 1. Validar Google reCAPTCHA
+    // 1. Verificar si la cuenta está bloqueada temporalmente
+    const bloqueos = intentosFallidos.get(username.trim()) || 0;
+    if (bloqueos >= 3) {
+        return res.status(403).json({ error: 'Cuenta bloqueada por seguridad. Intenta en 5 minutos.' });
+    }
+
+    // 2. Validar Google reCAPTCHA
     try {
         const secretKey = process.env.RECAPTCHA_SECRET_KEY || 'TU_CLAVE_SECRETA_RECAPTCHA';
         const recaptchaUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaToken}`;
@@ -167,15 +174,27 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         return res.status(500).json({ error: 'Error interno verificando seguridad' });
     }
 
-    // 2. Validar Usuario (Base de datos en memoria para el ejercicio)
+    // 3. Validar Usuario (Base de datos en memoria para el ejercicio)
     const user = USUARIOS.find(u => u.username === username.trim());
     if (!user || user.password !== password) {
-        return res.status(401).json({ error: 'Credenciales incorrectas' });
+        const nuevosIntentos = bloqueos + 1;
+        intentosFallidos.set(username.trim(), nuevosIntentos);
+        
+        if (nuevosIntentos >= 3) {
+            // Programar desbloqueo automático en 5 minutos
+            setTimeout(() => intentosFallidos.delete(username.trim()), 5 * 60 * 1000);
+            return res.status(403).json({ error: 'Demasiados intentos fallidos. Cuenta bloqueada por 5 minutos.' });
+        }
+        
+        return res.status(401).json({ error: `Credenciales incorrectas. Te quedan ${3 - nuevosIntentos} intentos.` });
     }
 
-    // 3. Crear sesión segura
+    // Si el login es exitoso, limpiar intentos fallidos
+    intentosFallidos.delete(username.trim());
+
+    // 4. Crear sesión segura de 3 minutos
     const sessionId = generarSessionId();
-    const expiry    = new Date(Date.now() + 60 * 60 * 1000);
+    const expiry    = new Date(Date.now() + 3 * 60 * 1000); // 3 minutos
 
     sesionesActivas.set(sessionId, {
         id: user.id, username: user.username, rol: user.rol, nombre: user.nombre, expira: expiry.toISOString()
