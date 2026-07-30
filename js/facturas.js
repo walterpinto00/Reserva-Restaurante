@@ -58,9 +58,19 @@ const FacturasModule = {
             // Mostrar modal de carga
             this._mostrarModalCarga();
 
+            // 1. Obtener Token CSRF primero
+            const resToken = await fetch(`${this.PROXY_URL}/api/csrf-token`, { credentials: 'include' });
+            if (!resToken.ok) throw new Error('No se pudo obtener token de seguridad (CSRF)');
+            const { csrfToken } = await resToken.json();
+
+            // 2. Hacer la petición POST de factura con el token
             const res = await fetch(`${this.PROXY_URL}/api/facturas`, {
                 method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Para enviar la cookie de sesión HTTP-Only
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-csrf-token': csrfToken // Escudo CSRF
+                },
                 body: JSON.stringify({
                     despacho: { id: despacho.id, mesaNumero: despacho.mesaNumero },
                     cliente:  'Cliente Mesa ' + despacho.mesaNumero,
