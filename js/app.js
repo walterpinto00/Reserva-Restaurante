@@ -127,6 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 UIModule.updateDateDisplay();
                 UIModule.renderDashboardStats();
                 UIModule.renderMesas();
+                
+                // Actualizar info del usuario
+                const roleBadge = document.getElementById('user-role-badge');
+                if (roleBadge) {
+                    roleBadge.textContent = session.rol;
+                    roleBadge.className = 'role-badge role-' + session.rol;
+                }
+                
             } catch (err) {
                 console.error('Error al cargar UI:', err);
             }

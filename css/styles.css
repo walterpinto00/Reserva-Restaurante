@@ -537,9 +537,34 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
 .role-badge {
     font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
+    padding: 2px 6px; border-radius: 4px;
+    color: white;
+    display: inline-block; margin-top: 2px;
+}
+
+/* ── Estilos de roles (Taller de Seguridad) ── */
+.role-administrador {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.role-mesero {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+}
+
+.role-cocina {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 184, 166, 0.2));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.role-despachador {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #c084fc;
 }
 
 .btn-logout {
