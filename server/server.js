@@ -1,5 +1,5 @@
 // server/server.js
-// Servidor ReservaRest: proxy Factus + autenticación con Cookies HTTP-Only
+// Servidor ReservaRest: proxy Factus + autenticación + SEGURIDAD AVANZADA
 require('dotenv').config({ path: __dirname + '/.env' });
 
 const express      = require('express');
@@ -7,35 +7,106 @@ const cors         = require('cors');
 const cookieParser = require('cookie-parser');
 const crypto       = require('crypto');
 const path         = require('path');
+const fs           = require('fs');
 const { emitirFactura, consultarFactura } = require('./factusService');
+
+// ── Paquetes de Seguridad ──────────────────────────────────────────────────
+const helmet       = require('helmet');
+const rateLimit    = require('express-rate-limit');
+const { doubleCsrf } = require('csrf-csrf');
+const multer       = require('multer');
+const sharp        = require('sharp');
+const { v4: uuidv4 } = require('uuid');
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
 
-// ── CORS con soporte de cookies ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// 1. SEGURIDAD BASE Y CABECERAS (HELMET & CORS)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Helmet protege la aplicación configurando varias cabeceras HTTP (oculta X-Powered-By, previene clickjacking, etc.)
+app.use(helmet({
+    contentSecurityPolicy: false, // Desactivado temporalmente si tienes scripts inline en tu HTML local
+    crossOriginEmbedderPolicy: false
+}));
+
 app.use(cors({
     origin:      ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:4000'],
     credentials: true,          // Permite envío de cookies en peticiones cross-origin
     methods:     ['GET', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'] // Añadimos header CSRF
 }));
 
 app.use(express.json());
-app.use(cookieParser(process.env.COOKIE_SECRET || 'reservarest_cookie_secret_2026'));
+// La firma secreta de cookies debe ser fuerte
+const cookieSecret = process.env.COOKIE_SECRET || 'reservarest_cookie_secret_2026';
+app.use(cookieParser(cookieSecret));
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2. PROTECCIÓN CONTRA CSRF (Cross-Site Request Forgery)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsrf({
+    getSecret: () => cookieSecret, // Secreto para firmar el token CSRF
+    cookieName: "x-csrf-token",    // Nombre de la cookie donde viaja el hash
+    cookieOptions: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/"
+    },
+    size: 64,
+    ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+    getTokenFromRequest: (req) => req.headers["x-csrf-token"] // El frontend debe enviar esto en los headers
+});
+
+// Endpoint para que el frontend obtenga su token CSRF antes de hacer peticiones POST
+app.get('/api/csrf-token', (req, res) => {
+    const csrfToken = generateToken(res, req);
+    res.json({ csrfToken });
+});
+
+// Manejo de errores CSRF global
+app.use((err, req, res, next) => {
+    if (err == invalidCsrfTokenError) {
+        return res.status(403).json({ error: "Token CSRF inválido o ausente. Petición bloqueada." });
+    }
+    next(err);
+});
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 3. PROTECCIÓN CONTRA FUERZA BRUTA Y BOTS (RATE LIMITING)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Límite estricto para el Login (evita ataques de diccionario/fuerza bruta)
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // Máximo 5 intentos por IP
+    message: { error: "Demasiados intentos de inicio de sesión. Por favor, intenta de nuevo en 15 minutos." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Límite moderado para la API de Facturas/Reservas (evita bots de saturación DdoS)
+const apiLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutos
+    max: 30, // Máximo 30 facturas/peticiones por IP
+    message: { error: "Has excedido el límite de peticiones. Intenta más tarde." }
+});
+
 
 // ── Servir el frontend desde el servidor ────────────────────────────────────
-// Así index.html y el servidor comparten el mismo origin → cookies funcionan sin CORS
 app.use(express.static(path.join(__dirname, '..')));
 
 // ── Store en memoria para sesiones activas (en prod. usar Redis) ─────────────
 const sesionesActivas = new Map();
 
-// ── Función que genera una Cookie de sesión segura ──────────────────────────
 function generarSessionId() {
     return crypto.randomBytes(32).toString('hex');
 }
 
-// ── Usuarios hardcoded (igual que localStorage, mismos roles) ───────────────
 const USUARIOS = [
     { id: 'u1', username: 'admin',    password: 'admin123',    rol: 'admin',    nombre: 'Administrador Principal' },
     { id: 'u2', username: 'mesero',   password: 'mesero123',   rol: 'mesero',   nombre: 'Carlos Mesero'           },
@@ -43,7 +114,6 @@ const USUARIOS = [
     { id: 'u4', username: 'despacho', password: 'despacho123', rol: 'despacho', nombre: 'Luis Despacho'           }
 ];
 
-// ── MIDDLEWARE: verificar cookie de sesión ───────────────────────────────────
 function requireSession(req, res, next) {
     const sessionId = req.cookies['rr_session'];
     if (!sessionId || !sesionesActivas.has(sessionId)) {
@@ -57,180 +127,149 @@ function requireSession(req, res, next) {
 //  RUTAS DE AUTENTICACIÓN
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/ping', (req, res) => {
-    res.json({
-        ok: true,
-        mensaje: 'Servidor ReservaRest activo',
-        cookie_activa: !!req.cookies['rr_session'],
-        ts: new Date().toISOString()
-    });
+    res.json({ ok: true, mensaje: 'Servidor ReservaRest activo', ts: new Date().toISOString() });
 });
 
-// ── POST /api/auth/login — Login y generación de Cookie HTTP-Only ─────────────
-app.post('/api/auth/login', (req, res) => {
+// Aplicamos loginLimiter SOLO a esta ruta
+app.post('/api/auth/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
-    }
+    if (!username || !password) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
 
-    // Buscar usuario
     const user = USUARIOS.find(u => u.username === username.trim());
-    if (!user || user.password !== password) {
-        return res.status(401).json({ error: 'Credenciales incorrectas' });
-    }
+    if (!user || user.password !== password) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    // Crear session ID seguro
     const sessionId = generarSessionId();
-    const expiry    = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+    const expiry    = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Guardar sesión en memoria del servidor
     sesionesActivas.set(sessionId, {
-        id:       user.id,
-        username: user.username,
-        rol:      user.rol,
-        nombre:   user.nombre,
-        creadaEn: new Date().toISOString(),
-        expira:   expiry.toISOString()
+        id: user.id, username: user.username, rol: user.rol, nombre: user.nombre, expira: expiry.toISOString()
     });
 
-    // ── Cookie 1: HTTP-Only (segura, NO accesible desde JS) ──
-    // Almacena el session ID — protege contra XSS
     res.cookie('rr_session', sessionId, {
-        httpOnly: true,                                   // No accesible via document.cookie
-        secure:   process.env.NODE_ENV === 'production', // Solo HTTPS en producción
-        sameSite: 'lax',                                 // Protección CSRF
-        expires:  expiry,
-        path:     '/'
+        httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiry, path: '/'
     });
 
-    // ── Cookie 2: Legible por JS (solo info de UI, NO credenciales) ──
-    // El frontend la usa para mostrar nombre y rol sin llamar al servidor
-    res.cookie('rr_user_info', JSON.stringify({
-        nombre: user.nombre,
-        rol:    user.rol
-    }), {
-        httpOnly: false,   // El frontend puede leerla para mostrar datos
-        secure:   process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        expires:  expiry,
-        path:     '/'
+    res.cookie('rr_user_info', JSON.stringify({ nombre: user.nombre, rol: user.rol }), {
+        httpOnly: false, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiry, path: '/'
     });
 
-    console.log(`✅ Login: ${user.username} (${user.rol}) — Session: ${sessionId.substring(0, 8)}...`);
-
-    res.json({
-        ok:     true,
-        nombre: user.nombre,
-        rol:    user.rol
-    });
+    res.json({ ok: true, nombre: user.nombre, rol: user.rol });
 });
 
-// ── POST /api/auth/logout — Destruir cookie y sesión ─────────────────────────
-app.post('/api/auth/logout', (req, res) => {
+// Protegemos el logout con CSRF (opcional, pero buena práctica)
+app.post('/api/auth/logout', doubleCsrfProtection, (req, res) => {
     const sessionId = req.cookies['rr_session'];
-    if (sessionId) {
-        sesionesActivas.delete(sessionId);
-        console.log(`🚪 Logout: sesión eliminada ${sessionId.substring(0, 8)}...`);
-    }
-
-    // Limpiar ambas cookies
-    res.clearCookie('rr_session',   { path: '/' });
+    if (sessionId) sesionesActivas.delete(sessionId);
+    res.clearCookie('rr_session', { path: '/' });
     res.clearCookie('rr_user_info', { path: '/' });
-
     res.json({ ok: true, mensaje: 'Sesión cerrada' });
 });
 
-// ── GET /api/auth/verificar — Verificar si la cookie de sesión es válida ─────
-app.get('/api/auth/verificar', requireSession, (req, res) => {
-    res.json({
-        ok:      true,
-        usuario: req.usuario
-    });
-});
 
-// ── GET /api/auth/sesiones — Ver sesiones activas (solo admin) ────────────────
-app.get('/api/auth/sesiones', requireSession, (req, res) => {
-    if (req.usuario.rol !== 'admin') {
-        return res.status(403).json({ error: 'Solo el administrador puede ver sesiones activas' });
+// ═══════════════════════════════════════════════════════════════════════════
+// 4. SEGURIDAD DE IMÁGENES (Subida y Hotlinking)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Configuración de Multer (Almacenar en MEMORIA para procesar antes de guardar)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // Límite estricto de 5MB
+    fileFilter: (req, file, cb) => {
+        // Validación estricta de MIME types
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (allowedMimes.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Formato de archivo no permitido. Solo JPG, PNG, WEBP.'));
     }
-    const sesiones = Array.from(sesionesActivas.entries()).map(([id, datos]) => ({
-        sessionId: id.substring(0, 8) + '...',
-        ...datos
-    }));
-    res.json({ ok: true, total: sesiones.length, sesiones });
 });
 
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
+
+// Endpoint protegido para subir imágenes:
+// requireSession (autenticado) + doubleCsrfProtection (no falsificable) + upload.single
+app.post('/api/upload-image', requireSession, doubleCsrfProtection, upload.single('imagen'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "No se envió ninguna imagen." });
+
+        const nombreArchivo = `${uuidv4()}.webp`;
+        const rutaDestino = path.join(UPLOADS_DIR, nombreArchivo);
+
+        // SHARP: El verdadero sanitizador. 
+        // 1. Lee el buffer (no el disco).
+        // 2. Si no es una imagen válida, arroja error (evita scripts ocultos).
+        // 3. Elimina metadatos EXIF (GPS, cámara) para privacidad.
+        // 4. Lo convierte a un formato estándar (WebP) y lo guarda seguro.
+        await sharp(req.file.buffer)
+            .resize({ width: 1200, withoutEnlargement: true }) // Evita imágenes absurdamente grandes
+            .webp({ quality: 80 }) // Convierte a WebP
+            .withMetadata(false)   // ELIMINA metadatos maliciosos / GPS
+            .toFile(rutaDestino);
+
+        res.json({ ok: true, url: `/images/${nombreArchivo}`, mensaje: "Imagen procesada y guardada seguro." });
+    } catch (error) {
+        console.error("Error al procesar imagen:", error);
+        res.status(500).json({ error: "Error al procesar la imagen de forma segura." });
+    }
+});
+
+// Middleware Anti-Hotlinking (Solo permite que las imágenes se vean desde tu propio dominio)
+const antiHotlinking = (req, res, next) => {
+    const referer = req.get('Referer') || req.get('Origin');
+    const dominiosPermitidos = ['http://localhost:4000', 'http://127.0.0.1:4000', 'http://localhost:5500'];
+    
+    // Si no hay referer (acceso directo en la barra) a veces se permite o bloquea según tu política. 
+    // Aquí bloquearemos si el referer no coincide con los permitidos.
+    if (referer && !dominiosPermitidos.some(d => referer.startsWith(d))) {
+        return res.status(403).send('Hotlinking no permitido.');
+    }
+    next();
+};
+
+// Servir la carpeta estática de imágenes pasándola primero por la protección anti-hotlinking
+app.use('/images', antiHotlinking, express.static(UPLOADS_DIR));
+
+
 // ═══════════════════════════════════════════════════════════════════════════
-//  RUTAS DE FACTURAS (protegidas con cookie)
+//  RUTAS DE FACTURAS (protegidas con cookie, CSRF y Rate Limit)
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ── POST /api/facturas ────────────────────────────────────────────────────────
-app.post('/api/facturas', requireSession, async (req, res) => {
+// Aplicar: requireSession (Auth), doubleCsrfProtection (CSRF), apiLimiter (Bots)
+app.post('/api/facturas', requireSession, doubleCsrfProtection, apiLimiter, async (req, res) => {
     try {
         const { despacho, cliente, items } = req.body;
-
-        if (!despacho || !items || items.length === 0) {
-            return res.status(400).json({ error: 'Faltan datos: despacho e items son obligatorios' });
-        }
+        if (!despacho || !items || items.length === 0) return res.status(400).json({ error: 'Faltan datos.' });
 
         const payload = {
-            numbering_range_id:  1,
-            reference_code:      despacho.id,
-            observation:         `Pedido Mesa ${despacho.mesaNumero} — ReservaRest`,
-            payment_form:        '1',
-            payment_due_date:    new Date().toISOString().split('T')[0],
-            payment_method_code: '10',
+            numbering_range_id: 1, reference_code: despacho.id,
+            observation: `Pedido Mesa ${despacho.mesaNumero}`, payment_form: '1',
+            payment_due_date: new Date().toISOString().split('T')[0], payment_method_code: '10',
             customer: {
-                identification:             '222222222222',
-                dv:                         null,
-                company:                    null,
-                trade_name:                 null,
-                names:                      cliente || 'Cliente General',
-                address:                    'Restaurante',
-                email:                      'cliente@restaurante.com',
-                phone:                      '3000000000',
-                legal_organization_id:      '2',
-                tribute_id:                 '21',
-                identification_document_id: '3',
-                municipality_id:            '980',
+                identification: '222222222222', dv: null, company: null, trade_name: null,
+                names: cliente || 'Cliente General', address: 'Restaurante', email: 'cliente@rest.com',
+                phone: '3000000000', legal_organization_id: '2', tribute_id: '21',
+                identification_document_id: '3', municipality_id: '980',
             },
             items: items.map((item, i) => ({
-                code_reference:   `PLT-${item.platoId || i + 1}`,
-                name:             item.nombre,
-                quantity:         item.cantidad,
-                discount_rate:    0,
-                price:            item.precio,
-                tax_rate:         '19.00',
-                unit_measure_id:  70,
-                standard_code_id: 1,
-                is_excluded:      0,
-                tribute_id:       1,
-                withholding_taxes: []
+                code_reference: `PLT-${item.platoId || i + 1}`, name: item.nombre, quantity: item.cantidad,
+                discount_rate: 0, price: item.precio, tax_rate: '19.00', unit_measure_id: 70,
+                standard_code_id: 1, is_excluded: 0, tribute_id: 1, withholding_taxes: []
             }))
         };
 
         const resultado = await emitirFactura(payload);
-
-        console.log(`🧾 Factura emitida por ${req.usuario.username} — Mesa ${despacho.mesaNumero}`);
-
         res.json({
-            ok:      true,
-            cufe:    resultado.data?.cufe,
-            numero:  resultado.data?.number,
-            qr:      resultado.data?.qr_code,
-            pdf_url: resultado.data?.public_url,
+            ok: true, cufe: resultado.data?.cufe, numero: resultado.data?.number,
+            qr: resultado.data?.qr_code, pdf_url: resultado.data?.public_url,
         });
 
     } catch (err) {
-        console.error('❌ Error emitiendo factura:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// ── GET /api/facturas/:numero ──────────────────────────────────────────────────
-app.get('/api/facturas/:numero', requireSession, async (req, res) => {
+app.get('/api/facturas/:numero', requireSession, apiLimiter, async (req, res) => {
     try {
         const data = await consultarFactura(req.params.numero);
         res.json({ ok: true, data });
@@ -241,24 +280,20 @@ app.get('/api/facturas/:numero', requireSession, async (req, res) => {
 
 // ── Manejador global de errores ──────────────────────────────────────────────
 app.use((err, req, res, next) => {
-    console.error('Error no capturado:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error capturado por middleware:', err.message);
+    res.status(err.status || 500).json({ error: err.message || 'Error interno' });
 });
 
-// ── Limpiar sesiones expiradas cada 10 minutos ───────────────────────────────
 setInterval(() => {
     const ahora = Date.now();
     for (const [id, datos] of sesionesActivas.entries()) {
-        if (new Date(datos.expira).getTime() < ahora) {
-            sesionesActivas.delete(id);
-            console.log(`🗑️ Sesión expirada eliminada: ${id.substring(0, 8)}...`);
-        }
+        if (new Date(datos.expira).getTime() < ahora) sesionesActivas.delete(id);
     }
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-    console.log(`\n🚀 Servidor ReservaRest corriendo en http://localhost:${PORT}`);
-    console.log(`🍽️  Abre la app en: http://localhost:${PORT}/index.html`);
-    console.log(`🧾 Integración Factus: activada`);
-    console.log(`🍪 Cookies HTTP-Only: activadas\n`);
+    console.log(`\n🚀 Servidor ReservaRest con SEGURIDAD AVANZADA en http://localhost:${PORT}`);
+    console.log(`🛡️  Helmet, CSRF y Rate Limit: Activados`);
+    console.log(`🖼️  Sanitización de Imágenes (Sharp): Lista`);
+    console.log(`🧾 Integración Factus: Lista\n`);
 });
