@@ -112,8 +112,8 @@ const AuthModule = {
         }
     },
 
-    // ── Autenticar usuario: localStorage + Cookie HTTP-Only (si hay servidor) ─
-    login(username, password) {
+    // ── Autenticar usuario obligando validación backend (reCAPTCHA) ───────────
+    async login(username, password, recaptchaToken) {
         try {
             const db           = StorageModule.getDB();
             const expectedHash = this.hashPassword(username + '123');
@@ -124,17 +124,29 @@ const AuthModule = {
             if (inputHash !== expectedHash) return { ok: false, error: 'Contraseña incorrecta.' };
 
             try {
+                // Validación estricta en el servidor para reCAPTCHA
+                const res = await fetch(`${SERVER_URL}/api/auth/login`, {
+                    method:      'POST',
+                    credentials: 'include',
+                    headers:     { 'Content-Type': 'application/json' },
+                    body:        JSON.stringify({ username, password, recaptchaToken }),
+                    signal:      AbortSignal.timeout(5000)
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    return { ok: false, error: data.error || 'Error de validación del servidor' };
+                }
+
                 const userData = { id: user.id, username: user.username, rol: user.rol, nombre: user.nombre };
 
-                // 1. Guardar JWT en localStorage (siempre funciona)
+                // 1. Guardar JWT en localStorage (compatibilidad con renderizado UI actual)
                 localStorage.setItem(SESSION_KEY, this._crearToken(userData));
 
-                // 2. Pedir cookie HTTP-Only al servidor (asíncrono, no bloquea)
-                this._sincronizarCookieServidor(username, password);
-
+                console.log('✅ Autenticación y reCAPTCHA exitosos');
                 return { ok: true, user: userData };
             } catch (err) {
-                return { ok: false, error: 'Error al crear la sesión.' };
+                return { ok: false, error: 'Servidor no disponible para validar CAPTCHA.' };
             }
         } catch (err) {
             return { ok: false, error: 'Error al procesar el inicio de sesión.' };

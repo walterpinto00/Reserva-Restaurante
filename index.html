@@ -35,6 +35,10 @@
                 <div class="form-group">
                     <span class="material-symbols-rounded">lock</span>
                     <input type="password" id="login-pass" class="input-glass" placeholder="Contraseña">
+                <!-- CAPTCHA Section (Google reCAPTCHA v2) -->
+                <div class="captcha-container" style="background:transparent; border:none; padding:0;">
+                    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                    <div class="g-recaptcha" data-sitekey="TU_CLAVE_SITIO" data-theme="dark"></div>
                 </div>
 
                 <div id="login-error" class="error-msg"></div>
@@ -275,11 +279,55 @@
         </div>
     </div>
 
+    <!-- ═══════════════ MODAL NUEVA MESA ═══════════════ -->
+    <div id="modal-mesa" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>
+                    <span class="material-symbols-rounded">add_circle</span>
+                    Nueva Mesa
+                </h3>
+                <button id="modal-mesa-close-x" class="modal-close-btn" aria-label="Cerrar">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            <form id="form-mesa" class="modal-form" novalidate>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="mesa-numero">Número *</label>
+                        <input type="number" id="mesa-numero" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mesa-capacidad">Capacidad *</label>
+                        <input type="number" id="mesa-capacidad" min="1" max="20" required>
+                    </div>
+                    <div class="form-group form-group--full">
+                        <label for="mesa-zona">Zona *</label>
+                        <select id="mesa-zona" required>
+                            <option value="Terraza">Terraza</option>
+                            <option value="Salón Principal">Salón Principal</option>
+                            <option value="Bar">Bar</option>
+                            <option value="VIP">VIP</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="modal-mesa-error" class="modal-error-msg"></div>
+                <div class="modal-actions">
+                    <button type="button" id="modal-mesa-cancel" class="btn-modal-cancel">Cancelar</button>
+                    <button type="submit" class="btn-modal-save">
+                        <span class="material-symbols-rounded">check_circle</span>
+                        Guardar Mesa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/storage.js"></script>
     <script src="js/validaciones.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/modules.js"></script>
     <script src="js/facturas.js"></script>
+    <script src="js/modules.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

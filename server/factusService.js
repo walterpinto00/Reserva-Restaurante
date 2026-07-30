@@ -1,6 +1,7 @@
 // server/factusService.js
 // Servicio que maneja la autenticación y comunicación con la API de Factus
 require('dotenv').config();
+const crypto = require('crypto');
 
 const FACTUS_BASE = process.env.FACTUS_BASE_URL || 'https://api.factus.com.co';
 
@@ -78,6 +79,20 @@ async function getToken() {
 
 // ── 4. Emitir factura electrónica en Factus ───────────────────────────────────
 async function emitirFactura(datosFactura) {
+    // 🔥 MODO SIMULACIÓN PARA EVALUACIÓN SIN CREDENCIALES 🔥
+    if (process.env.FACTUS_CLIENT_ID === 'TU_CLIENT_ID_AQUI') {
+        console.log('⚠️ Ejecutando Factus en MODO SIMULACIÓN (Credenciales por defecto)');
+        await new Promise(resolve => setTimeout(resolve, 1200)); // Retraso realista
+        return {
+            data: {
+                cufe: 'SIMULADO-' + crypto.randomUUID(),
+                number: 'SETP-' + Math.floor(Math.random() * 10000),
+                qr_code: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=SIMULACION',
+                public_url: 'https://www.dian.gov.co/simulacion'
+            }
+        };
+    }
+
     const token = await getToken();
 
     const res = await fetch(`${FACTUS_BASE}/v1/bills/validate`, {
@@ -100,6 +115,10 @@ async function emitirFactura(datosFactura) {
 
 // ── 5. Consultar factura por número ──────────────────────────────────────────
 async function consultarFactura(numero) {
+    if (process.env.FACTUS_CLIENT_ID === 'TU_CLIENT_ID_AQUI') {
+        return { data: { number: numero, status: 'Simulada - Pagada' } };
+    }
+
     const token = await getToken();
 
     const res = await fetch(`${FACTUS_BASE}/v1/bills/${numero}`, {

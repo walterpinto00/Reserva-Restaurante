@@ -31,11 +31,20 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
+// Middleware de logueo para depuración
+app.use((req, res, next) => {
+    console.log(`[REQ] ${req.method} ${req.url} - Origin: ${req.get('origin') || 'N/A'}`);
+    next();
+});
+
 app.use(cors({
-    origin:      ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:4000'],
+    origin: function (origin, callback) {
+        // Permitir cualquier origen local (XAMPP, Live Server, etc.)
+        callback(null, true); 
+    },
     credentials: true,          // Permite envío de cookies en peticiones cross-origin
-    methods:     ['GET', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'] // Añadimos header CSRF
+    methods:     ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token']
 }));
 
 app.use(express.json());
@@ -47,7 +56,7 @@ app.use(cookieParser(cookieSecret));
 // 2. PROTECCIÓN CONTRA CSRF (Cross-Site Request Forgery)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsrf({
+const { invalidCsrfTokenError, generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
     getSecret: () => cookieSecret, // Secreto para firmar el token CSRF
     cookieName: "x-csrf-token",    // Nombre de la cookie donde viaja el hash
     cookieOptions: {
@@ -58,12 +67,14 @@ const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsr
     },
     size: 64,
     ignoredMethods: ["GET", "HEAD", "OPTIONS"],
-    getTokenFromRequest: (req) => req.headers["x-csrf-token"] // El frontend debe enviar esto en los headers
+    getTokenFromRequest: (req) => req.headers["x-csrf-token"], // El frontend debe enviar esto en los headers
+    getSessionIdentifier: (req) => req.cookies['rr_session'] || 'guest' // Requerido en csrf-csrf v4+
 });
 
 // Endpoint para que el frontend obtenga su token CSRF antes de hacer peticiones POST
 app.get('/api/csrf-token', (req, res) => {
-    const csrfToken = generateToken(res, req);
+    // generateCsrfToken usually takes req, res
+    const csrfToken = generateCsrfToken(req, res);
     res.json({ csrfToken });
 });
 

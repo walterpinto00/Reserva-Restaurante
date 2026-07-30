@@ -207,11 +207,12 @@ const UIModule = {
                         acciones += `<button class="btn-action" onclick="window.crearDespacho('${p.id}')">Enviar a Despacho</button>`;
                     }
 
+                    let notasHTML = p.notas ? `<br><small style="color: var(--secondary); font-size: 11px; display: inline-block; margin-top: 4px;">📝 ${p.notas}</small>` : '';
                     filas += `
                         <tr class="stagger-item" style="animation-delay: ${index * 0.05}s">
                             <td style="color:var(--text-muted)">#${p.id.slice(-4)}</td>
                             <td>Mesa ${mesaObj ? mesaObj.numero : '?'}</td>
-                            <td><strong>${p.cantidad}x</strong> ${platoObj ? platoObj.nombre : '?'}</td>
+                            <td><strong>${p.cantidad}x</strong> ${platoObj ? platoObj.nombre : '?'}${notasHTML}</td>
                             <td><span class="badge-reserva ${badge}">${textoEstado}</span></td>
                             <td>${acciones}</td>
                         </tr>`;

@@ -156,17 +156,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Login con validación del instructor primero
-    btnLogin.addEventListener('click', () => {
+    // Login con validación de Google reCAPTCHA v2
+    btnLogin.addEventListener('click', async () => {
         if (!validarLogin()) return; // validación básica con alert()
 
         const user = inputUser.value.trim();
         const pass = inputPass.value.trim();
         errorMsg.textContent = '';
 
+        // 1. Validar si completó el reCAPTCHA
+        const recaptchaToken = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
+        if (!recaptchaToken) {
+            errorMsg.textContent = 'Por favor, marca la casilla de "No soy un robot".';
+            return;
+        }
+
         try {
             btnLogin.textContent = 'Verificando...';
-            const result = AuthModule.login(user, pass);
+            btnLogin.disabled = true;
+
+            // 2. AuthModule.login ahora es asíncrono y valida con el backend
+            const result = await AuthModule.login(user, pass, recaptchaToken);
+            
             if (result.ok) {
                 inputPass.value = '';
                 initApp();
@@ -175,8 +186,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             errorMsg.textContent = error.message;
+            if (typeof grecaptcha !== 'undefined') grecaptcha.reset(); // Reiniciar CAPTCHA si falla
         } finally {
-            btnLogin.textContent = 'ACCEDER AL SISTEMA';
+            btnLogin.textContent = 'Iniciar Sesión';
+            btnLogin.disabled = false;
         }
     });
 
@@ -268,10 +281,65 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const db = StorageModule.getDB();
-            db.pedidos.push({ id: 'p' + Date.now(), mesaId, platoId, cantidad, estado: 'pendiente' });
+            const notas = document.getElementById('ped-notas') ? document.getElementById('ped-notas').value.trim() : '';
+            db.pedidos.push({ id: 'p' + Date.now(), mesaId, platoId, cantidad, estado: 'pendiente', notas });
             StorageModule.saveDB(db);
             cerrarModalPedido();
             UIModule.renderPedidos();
+            UIModule.renderDashboardStats();
+        });
+    }
+
+    // Modal de Nueva Mesa
+    const modalMesa = document.getElementById('modal-mesa');
+    const formMesa  = document.getElementById('form-mesa');
+    const btnNuevaMesa = document.getElementById('btn-nueva-mesa');
+    
+    if (btnNuevaMesa) {
+        btnNuevaMesa.addEventListener('click', () => {
+            if (!modalMesa) return;
+            if (formMesa) formMesa.reset();
+            const errorMsg = document.getElementById('modal-mesa-error');
+            if (errorMsg) errorMsg.textContent = '';
+            modalMesa.classList.remove('hidden');
+        });
+    }
+
+    const cerrarModalMesa = () => { if (modalMesa) modalMesa.classList.add('hidden'); };
+    const btnMesaCloseX = document.getElementById('modal-mesa-close-x');
+    const btnMesaCancel = document.getElementById('modal-mesa-cancel');
+    if (btnMesaCloseX) btnMesaCloseX.addEventListener('click', cerrarModalMesa);
+    if (btnMesaCancel) btnMesaCancel.addEventListener('click', cerrarModalMesa);
+
+    if (formMesa) {
+        formMesa.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const numero = document.getElementById('mesa-numero').value.trim();
+            const capacidad = parseInt(document.getElementById('mesa-capacidad').value, 10);
+            const zona = document.getElementById('mesa-zona').value;
+            const errorMsg = document.getElementById('modal-mesa-error');
+
+            if (!numero || isNaN(capacidad) || capacidad < 1 || !zona) {
+                errorMsg.textContent = '⚠️ Completa todos los campos correctamente.';
+                return;
+            }
+
+            const db = StorageModule.getDB();
+            if (db.mesas.some(m => m.numero === numero)) {
+                errorMsg.textContent = `⚠️ La mesa ${numero} ya existe.`;
+                return;
+            }
+
+            db.mesas.push({
+                id: 'm' + Date.now(),
+                numero: numero,
+                capacidad: capacidad,
+                zona: zona,
+                estado: 'disponible'
+            });
+            StorageModule.saveDB(db);
+            cerrarModalMesa();
+            UIModule.renderMesas();
             UIModule.renderDashboardStats();
         });
     }
