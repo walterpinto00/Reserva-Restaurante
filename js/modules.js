@@ -139,7 +139,7 @@ const UIModule = {
                 </div>
                 <div class="table-container">
                     <div class="table-scroll">
-                        <table>
+                        <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>CLIENTE</th>
@@ -231,7 +231,7 @@ const UIModule = {
                     </h2>
                     ${btnNuevo}
                 </div>
-                <div class="table-container"><div class="table-scroll"><table>
+                <div class="table-container"><div class="table-scroll"><table class="data-table">
                     <thead><tr><th>ORDEN</th><th>MESA</th><th>PEDIDO</th><th>ESTADO</th><th>ACCIONES</th></tr></thead>
                     <tbody>${filas}</tbody>
                 </table></div></div>`;
@@ -298,7 +298,7 @@ const UIModule = {
                         Logística de Despachos
                     </h2>
                 </div>
-                <div class="table-container"><div class="table-scroll"><table>
+                <div class="table-container"><div class="table-scroll"><table class="data-table">
                     <thead><tr><th>DESPACHO</th><th>ORIGEN</th><th>DESTINO</th><th>ESTADO</th><th>ACCIONES</th></tr></thead>
                     <tbody>${filas}</tbody>
                 </table></div></div>`;
