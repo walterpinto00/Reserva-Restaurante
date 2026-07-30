@@ -1023,3 +1023,92 @@ tbody tr:last-child td { border-bottom: none; }
     .stat-value { font-size: 34px; }
     .user-text .name { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+
+/* ═══════════════════════════════════════════════════
+   FACTURACIÓN ELECTRÓNICA — Factus API
+═══════════════════════════════════════════════════ */
+
+/* Botón Facturar en la tabla de despachos */
+.btn-facturar {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white; font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 10px rgba(16,185,129,0.3);
+}
+.btn-facturar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.45);
+}
+.btn-facturar .material-symbols-rounded { font-size: 15px; }
+
+/* Modal de carga — emitiendo factura */
+#modal-factura-carga {
+    position: fixed; inset: 0; z-index: 9999;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(3, 7, 18, 0.85);
+    backdrop-filter: blur(12px);
+}
+.factura-carga-box {
+    background: var(--bg-card);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: var(--radius-xl);
+    padding: 48px 56px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(16,185,129,0.2);
+}
+.factura-carga-box p {
+    color: var(--text-sub); font-size: 15px; margin-top: 20px; line-height: 1.8;
+}
+.factura-carga-box small { color: var(--text-muted); font-size: 12px; }
+.factura-spinner {
+    width: 52px; height: 52px; margin: 0 auto;
+    border: 3px solid rgba(16,185,129,0.15);
+    border-top-color: #10b981;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Modal resultado de factura */
+.factura-resultado-box { max-width: 500px; }
+.factura-ok-header { border-bottom-color: rgba(16,185,129,0.3); }
+.factura-ok-header h3 { color: #10b981; }
+
+.factura-body { padding: 8px 0; }
+.factura-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+}
+.factura-row:last-child { border-bottom: none; }
+.factura-label {
+    font-size: 12px; color: var(--text-muted);
+    font-weight: 600; letter-spacing: 0.5px;
+    text-transform: uppercase; flex-shrink: 0;
+}
+.factura-value {
+    font-size: 14px; color: var(--text-main);
+    font-weight: 600; text-align: right;
+}
+.factura-value.cufe {
+    font-family: 'Courier New', monospace;
+    font-size: 11px; color: var(--text-muted);
+    word-break: break-all;
+}
+.factura-pdf-btn {
+    font-size: 13px; padding: 8px 18px;
+}
+.factura-qr {
+    margin-top: 20px; text-align: center;
+    padding: 16px;
+    background: white; border-radius: var(--radius-md);
+}
+.factura-qr img { width: 140px; height: 140px; }
+.factura-qr small {
+    display: block; margin-top: 8px;
+    font-size: 11px; color: #666;
+}
