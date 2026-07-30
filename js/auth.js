@@ -141,15 +141,28 @@ const AuthModule = {
         }
     },
 
-    logout() {
+    async logout() {
         try {
             localStorage.removeItem(SESSION_KEY);
 
-            // Eliminar cookie del servidor (sin bloquear)
-            fetch(`${SERVER_URL}/api/auth/logout`, {
-                method:      'POST',
-                credentials: 'include'
-            }).catch(() => {});
+            try {
+                // 1. Obtener Token CSRF
+                const resToken = await fetch(`${SERVER_URL}/api/csrf-token`, { credentials: 'include' });
+                if (resToken.ok) {
+                    const { csrfToken } = await resToken.json();
+
+                    // 2. Hacer logout con el token
+                    await fetch(`${SERVER_URL}/api/auth/logout`, {
+                        method:      'POST',
+                        credentials: 'include',
+                        headers: {
+                            'x-csrf-token': csrfToken // Escudo CSRF
+                        }
+                    });
+                }
+            } catch (e) {
+                // Ignorar si el servidor está caído
+            }
 
         } catch (err) {
             console.error('Error al cerrar sesión:', err.message);

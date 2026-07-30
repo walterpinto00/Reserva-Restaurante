@@ -21,22 +21,22 @@ const UIModule = {
             const mesasOcupadas = db.mesas.filter(m => m.estado === 'ocupada').length;
 
             container.innerHTML = `
-                <div class="stat-card blue">
+                <div class="stat-card glass-panel blue stagger-item" style="animation-delay: 0s">
                     <div class="stat-icon"><span class="material-symbols-rounded">edit_calendar</span></div>
                     <div class="stat-value">${db.reservas.length}</div>
                     <div class="stat-label">Reservas Activas</div>
                 </div>
-                <div class="stat-card purple">
+                <div class="stat-card glass-panel purple stagger-item" style="animation-delay: 0.1s">
                     <div class="stat-icon"><span class="material-symbols-rounded">skillet</span></div>
                     <div class="stat-value">${db.pedidos.length}</div>
                     <div class="stat-label">Platos en Cola</div>
                 </div>
-                <div class="stat-card cyan">
+                <div class="stat-card glass-panel cyan stagger-item" style="animation-delay: 0.2s">
                     <div class="stat-icon"><span class="material-symbols-rounded">moped</span></div>
                     <div class="stat-value">${db.despachos.length}</div>
                     <div class="stat-label">Despachos</div>
                 </div>
-                <div class="stat-card green">
+                <div class="stat-card glass-panel green stagger-item" style="animation-delay: 0.3s">
                     <div class="stat-icon"><span class="material-symbols-rounded">table_bar</span></div>
                     <div class="stat-value">${mesasOcupadas}</div>
                     <div class="stat-label">Mesas Ocupadas</div>
@@ -55,12 +55,12 @@ const UIModule = {
             const db = StorageModule.getDB();
             container.innerHTML = '';
 
-            db.mesas.forEach(mesa => {
+            db.mesas.forEach((mesa, index) => {
                 const estadoClass = mesa.estado === 'disponible' ? 'disponible'
                     : mesa.estado === 'ocupada' ? 'ocupada' : 'reservada';
 
                 container.innerHTML += `
-                    <div class="mesa-card">
+                    <div class="mesa-card glass-panel stagger-item" style="animation-delay: ${index * 0.05}s">
                         <div class="mesa-icon">
                             <span class="material-symbols-rounded">table_restaurant</span>
                         </div>
@@ -101,7 +101,7 @@ const UIModule = {
                         </td>
                     </tr>`;
             } else {
-                db.reservas.forEach(r => {
+                db.reservas.forEach((r, index) => {
                     const estadoClass = r.estado || 'pendiente';
                     const mesaObj = db.mesas.find(m => m.id === r.mesaId);
                     const mesaLabel = mesaObj
@@ -109,7 +109,7 @@ const UIModule = {
                         : r.mesaId;
 
                     filas += `
-                        <tr>
+                        <tr class="stagger-item" style="animation-delay: ${index * 0.05}s">
                             <td>${r.cliente}</td>
                             <td>${mesaLabel}</td>
                             <td>${r.fecha}</td>
@@ -186,7 +186,7 @@ const UIModule = {
             if (pedidosActivos.length === 0) {
                 filas = `<tr><td colspan="5"><div class="empty-state"><span class="material-symbols-rounded">skillet</span><p>La cola de cocina está vacía.</p></div></td></tr>`;
             } else {
-                pedidosActivos.forEach(p => {
+                pedidosActivos.forEach((p, index) => {
                     const mesaObj = db.mesas.find(m => m.id === p.mesaId);
                     const platoObj = db.platos.find(pl => pl.id === p.platoId);
                     
@@ -208,7 +208,7 @@ const UIModule = {
                     }
 
                     filas += `
-                        <tr>
+                        <tr class="stagger-item" style="animation-delay: ${index * 0.05}s">
                             <td style="color:var(--text-muted)">#${p.id.slice(-4)}</td>
                             <td>Mesa ${mesaObj ? mesaObj.numero : '?'}</td>
                             <td><strong>${p.cantidad}x</strong> ${platoObj ? platoObj.nombre : '?'}</td>
@@ -255,7 +255,7 @@ const UIModule = {
             if (db.despachos.length === 0) {
                 filas = `<tr><td colspan="5"><div class="empty-state"><span class="material-symbols-rounded">moped</span><p>No hay despachos registrados.</p></div></td></tr>`;
             } else {
-                db.despachos.forEach(d => {
+                db.despachos.forEach((d, index) => {
                     let badge = d.estado === 'en_ruta' ? 'pendiente' : 'confirmada';
                     let textoEstado = d.estado.replace('_', ' ').toUpperCase();
                     let acciones = '';
@@ -279,7 +279,7 @@ const UIModule = {
                     }
 
                     filas += `
-                        <tr>
+                        <tr class="stagger-item" style="animation-delay: ${index * 0.05}s">
                             <td style="color:var(--text-muted)">#${d.id.slice(-4)}</td>
                             <td>Ref Pedido #${d.pedidoId.slice(-4)}</td>
                             <td>Mesa ${d.mesaNumero}</td>
