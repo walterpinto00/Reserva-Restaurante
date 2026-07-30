@@ -5,24 +5,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-    /* ── Paleta Cyber/Aurora ── */
-    --bg-base:        #030305;
-    --glass-bg:       rgba(15, 15, 20, 0.65);
+    /* ── Paleta Corporate Glass ── */
+    --bg-base:        #0f172a; /* Slate 900 */
+    --glass-bg:       rgba(30, 41, 59, 0.75); /* Slate 800 semi-transparente */
     --glass-border:   rgba(255, 255, 255, 0.08);
     --glass-border-light: rgba(255, 255, 255, 0.15);
     
-    --primary:        #ff2a85; /* Magenta cibernético */
-    --primary-glow:   rgba(255, 42, 133, 0.5);
+    --primary:        #3b82f6; /* Blue 500 */
+    --primary-glow:   rgba(59, 130, 246, 0.4);
+    --primary-soft:   rgba(59, 130, 246, 0.15);
     
-    --secondary:      #00f0ff; /* Cian eléctrico */
-    --secondary-glow: rgba(0, 240, 255, 0.5);
+    --secondary:      #10b981; /* Emerald 500 */
+    --secondary-glow: rgba(16, 185, 129, 0.4);
+    --secondary-soft: rgba(16, 185, 129, 0.15);
 
-    --accent:         #7000ff; /* Púrpura profundo */
-    --accent-glow:    rgba(112, 0, 255, 0.5);
+    --accent:         #6366f1; /* Indigo 500 */
+    --accent-glow:    rgba(99, 102, 241, 0.4);
+    --accent-soft:    rgba(99, 102, 241, 0.15);
 
-    --text-main:      #ffffff;
-    --text-sub:       #e2e8f0;
-    --text-muted:     #94a3b8;
+    --text-main:      #f8fafc;
+    --text-sub:       #cbd5e1;
+    --text-muted:     #64748b;
 
     /* Estados */
     --success:        #00e676;
@@ -68,27 +71,27 @@ body {
     position: relative;
 }
 
-/* ── Fondo Animado "Aurora" ────────────────────────── */
+/* ── Fondo Animado "Aurora" (Más suave y elegante) ── */
 body::before, body::after {
     content: '';
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: -1;
-    filter: blur(120px);
-    opacity: 0.6;
+    filter: blur(140px);
+    opacity: 0.35; /* Mucho más sutil para entorno profesional */
     pointer-events: none;
-    animation: auroraMove 20s infinite alternate ease-in-out;
+    animation: auroraMove 25s infinite alternate ease-in-out;
 }
 
 body::before {
-    background: radial-gradient(circle at 20% 30%, var(--primary-glow) 0%, transparent 40%),
-                radial-gradient(circle at 80% 70%, var(--secondary-glow) 0%, transparent 40%);
+    background: radial-gradient(circle at 20% 30%, var(--primary-glow) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, var(--secondary-glow) 0%, transparent 50%);
 }
 
 body::after {
-    background: radial-gradient(circle at 80% 20%, var(--accent-glow) 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, rgba(255, 42, 133, 0.2) 0%, transparent 40%);
-    animation-delay: -10s;
+    background: radial-gradient(circle at 80% 20%, var(--accent-glow) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+    animation-delay: -12s;
     animation-direction: alternate-reverse;
 }
 
@@ -256,7 +259,7 @@ body::after {
     transform: scaleY(0); transition: var(--spring);
 }
 .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(4px); }
-.nav-item.active { background: linear-gradient(90deg, rgba(255,42,133,0.15), transparent); color: var(--primary); }
+.nav-item.active { background: linear-gradient(90deg, var(--primary-soft), transparent); color: var(--primary); }
 .nav-item.active::before { transform: scaleY(1); }
 .nav-item.active .material-symbols-rounded { color: var(--primary); font-variation-settings: 'FILL' 1; }
 
@@ -271,16 +274,21 @@ body::after {
 .role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
 
 /* Colores de roles (Taller) */
-.role-admin { background: rgba(255,42,133,0.15); color: #ff2a85; border: 1px solid rgba(255,42,133,0.3); }
-.role-mesero { background: rgba(0,240,255,0.15); color: #00f0ff; border: 1px solid rgba(0,240,255,0.3); }
+.role-admin { background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-glow); }
+.role-mesero { background: var(--secondary-soft); color: var(--secondary); border: 1px solid var(--secondary-glow); }
 .role-cocina { background: rgba(0,230,118,0.15); color: #00e676; border: 1px solid rgba(0,230,118,0.3); }
-.role-despacho { background: rgba(112,0,255,0.15); color: #c480ff; border: 1px solid rgba(112,0,255,0.3); }
+.role-despacho { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-glow); }
 
 /* Área Principal */
 .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 10; }
 .topbar { height: var(--topbar-h); padding: 0 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
-.topbar-date { display: flex; align-items: center; gap: 8px; color: var(--text-sub); font-size: 14px; font-weight: 600; }
-.topbar-date .material-symbols-rounded { color: var(--secondary); }
+
+/* Corrección del layout del Topbar izquierdo */
+.topbar-left { display: flex; align-items: center; gap: 24px; }
+.btn-hamburger { display: none; } /* Oculto en escritorio */
+.date-badge { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); }
+.date-badge .material-symbols-rounded { color: var(--primary); }
+.topbar-search { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; }
 
 .btn-logout {
     background: rgba(255,23,68,0.1); border: 1px solid rgba(255,23,68,0.2); color: var(--danger);
@@ -303,8 +311,8 @@ body::after {
 .section-title { display: flex; align-items: center; gap: 16px; font-size: 28px; font-weight: 800; }
 .section-title-icon {
     width: 52px; height: 52px; border-radius: 16px;
-    background: linear-gradient(135deg, rgba(255,42,133,0.15), rgba(0,240,255,0.15));
-    border: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, var(--primary-soft), var(--secondary-soft));
+    border: 1px solid var(--glass-border-light);
     color: white; display: flex; justify-content: center; align-items: center;
 }
 
@@ -333,10 +341,10 @@ body::after {
     width: 48px; height: 48px; border-radius: 14px;
     display: flex; justify-content: center; align-items: center; font-size: 24px;
 }
-.stat-card.blue .stat-icon { background: rgba(0,240,255,0.15); color: #00f0ff; box-shadow: 0 0 20px rgba(0,240,255,0.2); }
-.stat-card.purple .stat-icon { background: rgba(112,0,255,0.15); color: #c480ff; box-shadow: 0 0 20px rgba(112,0,255,0.2); }
-.stat-card.orange .stat-icon { background: rgba(255,234,0,0.15); color: #ffea00; box-shadow: 0 0 20px rgba(255,234,0,0.2); }
-.stat-card.green .stat-icon { background: rgba(0,230,118,0.15); color: #00e676; box-shadow: 0 0 20px rgba(0,230,118,0.2); }
+.stat-card.blue .stat-icon { background: var(--primary-soft); color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
+.stat-card.purple .stat-icon { background: var(--accent-soft); color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+.stat-card.orange .stat-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
+.stat-card.green .stat-icon { background: var(--secondary-soft); color: var(--secondary); box-shadow: 0 0 20px var(--secondary-glow); }
 
 .stat-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 .stat-value { font-size: 40px; font-weight: 800; color: white; line-height: 1; }
@@ -371,13 +379,13 @@ body::after {
 /* Botones y Badges en Tablas */
 .btn-action { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: var(--spring); }
 .btn-action:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 4px 12px var(--primary-glow); transform: translateY(-2px); }
-.btn-facturar { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, #00f0ff, #0088ff); color: #000; border: none; cursor: pointer; transition: var(--spring); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,240,255,0.4); }
-.btn-facturar:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(0,240,255,0.6); }
+.btn-facturar { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: #fff; border: none; cursor: pointer; transition: var(--spring); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px var(--secondary-glow); }
+.btn-facturar:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px var(--primary-glow); }
 
 .badge-reserva, .badge-status { padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
 .badge-reserva.pendiente { background: rgba(255,234,0,0.15); color: #ffea00; border: 1px solid rgba(255,234,0,0.3); }
 .badge-reserva.confirmada { background: rgba(0,230,118,0.15); color: #00e676; border: 1px solid rgba(0,230,118,0.3); }
-.badge-status.disponible { background: rgba(0,240,255,0.15); color: #00f0ff; border: 1px solid rgba(0,240,255,0.3); display: inline-flex; align-items: center; gap: 4px;}
+.badge-status.disponible { background: var(--secondary-soft); color: var(--secondary); border: 1px solid var(--secondary-glow); display: inline-flex; align-items: center; gap: 4px;}
 
 /* ═══════════════════════════════════════════════════
    MODALES (Glassmorphism animado)
@@ -420,11 +428,11 @@ body::after {
    FACTURACIÓN Y SPINNERS
 ═══════════════════════════════════════════════════ */
 #modal-factura-carga { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(12px); }
-.factura-carga-box { background: var(--glass-bg); backdrop-filter: blur(24px); border: 1px solid rgba(0,240,255,0.3); border-radius: var(--radius-xl); padding: 48px 56px; text-align: center; box-shadow: 0 0 60px rgba(0,240,255,0.2); animation: modalBounce var(--spring) forwards; }
-.factura-spinner { width: 60px; height: 60px; margin: 0 auto; border: 4px solid rgba(0,240,255,0.1); border-top-color: #00f0ff; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 20px rgba(0,240,255,0.4); }
+.factura-carga-box { background: var(--glass-bg); backdrop-filter: blur(24px); border: 1px solid var(--primary-soft); border-radius: var(--radius-xl); padding: 48px 56px; text-align: center; box-shadow: 0 0 60px var(--primary-glow); animation: modalBounce var(--spring) forwards; }
+.factura-spinner { width: 60px; height: 60px; margin: 0 auto; border: 4px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 20px var(--primary-glow); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.factura-ok-header h3 { color: #00f0ff; }
+.factura-ok-header h3 { color: var(--primary); }
 .factura-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
 .factura-row:last-child { border-bottom: none; }
 .factura-label { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
