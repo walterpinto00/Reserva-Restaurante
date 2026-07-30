@@ -468,9 +468,39 @@ body::after {
 .modal-body { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 12px; }
 
+/* Modal Form Styles */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.form-group--full { grid-column: 1 / -1; }
+
+.modal-form input, 
+.modal-form select, 
+.modal-form textarea {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    color: white;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    transition: var(--transition);
+}
+.modal-form input:focus, 
+.modal-form select:focus, 
+.modal-form textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 4px var(--primary-glow);
+}
+.modal-form textarea { resize: vertical; }
+.modal-form option { background: var(--bg-base); color: white; }
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
 .btn-modal-cancel { padding: 12px 24px; border-radius: var(--radius-sm); font-weight: 600; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: var(--transition); }
 .btn-modal-cancel:hover { background: rgba(255,255,255,0.1); }
-.btn-modal-save { padding: 12px 24px; border-radius: var(--radius-sm); font-weight: 600; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; cursor: pointer; transition: var(--spring); box-shadow: 0 4px 15px var(--primary-glow); }
+.btn-modal-save { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: var(--radius-sm); font-weight: 600; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; cursor: pointer; transition: var(--spring); box-shadow: 0 4px 15px var(--primary-glow); }
 .btn-modal-save:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--primary-glow); }
 
 /* ═══════════════════════════════════════════════════
