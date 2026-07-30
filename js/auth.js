@@ -1,6 +1,8 @@
 // js/auth.js — Autenticación con tokens tipo JWT (header.payload.firma)
+// + Sincronización con Cookie HTTP-Only del servidor cuando está disponible
 
 const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 1 hora
+const SERVER_URL      = 'http://localhost:4000';
 
 const AuthModule = {
 
@@ -78,7 +80,39 @@ const AuthModule = {
         }
     },
 
-    // Autenticar usuario y generar JWT en localStorage
+    // ── Leer cookie por nombre (solo las NO http-only) ─────────────────────
+    leerCookie(nombre) {
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            const [key, val] = c.trim().split('=');
+            if (key === nombre) {
+                try { return JSON.parse(decodeURIComponent(val)); }
+                catch { return decodeURIComponent(val); }
+            }
+        }
+        return null;
+    },
+
+    // ── Llamar al servidor para crear la Cookie HTTP-Only ──────────────────
+    async _sincronizarCookieServidor(username, password) {
+        try {
+            const res = await fetch(`${SERVER_URL}/api/auth/login`, {
+                method:      'POST',
+                credentials: 'include',   // Enviar/recibir cookies
+                headers:     { 'Content-Type': 'application/json' },
+                body:        JSON.stringify({ username, password }),
+                signal:      AbortSignal.timeout(3000)
+            });
+            if (res.ok) {
+                console.log('🍪 Cookie HTTP-Only generada en el servidor');
+            }
+        } catch (e) {
+            // El servidor no está activo — la app sigue funcionando con localStorage
+            console.info('ℹ️ Servidor offline: sesión solo en localStorage');
+        }
+    },
+
+    // ── Autenticar usuario: localStorage + Cookie HTTP-Only (si hay servidor) ─
     login(username, password) {
         try {
             const db           = StorageModule.getDB();
@@ -91,7 +125,13 @@ const AuthModule = {
 
             try {
                 const userData = { id: user.id, username: user.username, rol: user.rol, nombre: user.nombre };
+
+                // 1. Guardar JWT en localStorage (siempre funciona)
                 localStorage.setItem(SESSION_KEY, this._crearToken(userData));
+
+                // 2. Pedir cookie HTTP-Only al servidor (asíncrono, no bloquea)
+                this._sincronizarCookieServidor(username, password);
+
                 return { ok: true, user: userData };
             } catch (err) {
                 return { ok: false, error: 'Error al crear la sesión.' };
@@ -104,6 +144,13 @@ const AuthModule = {
     logout() {
         try {
             localStorage.removeItem(SESSION_KEY);
+
+            // Eliminar cookie del servidor (sin bloquear)
+            fetch(`${SERVER_URL}/api/auth/logout`, {
+                method:      'POST',
+                credentials: 'include'
+            }).catch(() => {});
+
         } catch (err) {
             console.error('Error al cerrar sesión:', err.message);
         } finally {
@@ -136,8 +183,11 @@ const AuthModule = {
 
             const roleBadge   = document.getElementById('user-role-badge');
             const nameDisplay = document.getElementById('user-name-display');
+            const avatar      = document.getElementById('user-avatar-initials');
+
             if (roleBadge)   roleBadge.textContent  = session.rol.toUpperCase();
             if (nameDisplay) nameDisplay.textContent = session.nombre;
+            if (avatar)      avatar.textContent      = session.nombre.charAt(0).toUpperCase();
 
             document.querySelectorAll('.sidebar .nav-item').forEach(item => {
                 const rolesAttr = item.getAttribute('data-roles');
@@ -162,6 +212,14 @@ const AuthModule = {
             console.log('PAYLOAD →', this._b64Decode(partes[1]));
             console.log('FIRMA   →', partes[2]);
             console.groupEnd();
+
+            // Mostrar también la cookie de UI si existe
+            const cookieInfo = this.leerCookie('rr_user_info');
+            if (cookieInfo) {
+                console.group('🍪 Cookie de sesión (UI)');
+                console.log(cookieInfo);
+                console.groupEnd();
+            }
         } catch (err) {
             console.error('Error al inspeccionar token:', err.message);
         }

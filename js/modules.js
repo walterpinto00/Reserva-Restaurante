@@ -259,9 +259,23 @@ const UIModule = {
                     let badge = d.estado === 'en_ruta' ? 'pendiente' : 'confirmada';
                     let textoEstado = d.estado.replace('_', ' ').toUpperCase();
                     let acciones = '';
-                    
+
                     if ((session.rol === 'admin' || session.rol === 'despacho') && d.estado === 'en_ruta') {
                         acciones = `<button class="btn-action" onclick="window.entregarDespacho('${d.id}')">Marcar Entregado</button>`;
+                    }
+
+                    // Botón Facturar — visible para admin/mesero si el despacho fue entregado
+                    if (d.estado === 'entregado' && (session.rol === 'admin' || session.rol === 'mesero')) {
+                        if (d.facturaNumero) {
+                            acciones += `<span class="badge-status disponible" title="Factura ${d.facturaNumero}">
+                                <span class="material-symbols-rounded" style="font-size:14px">receipt_long</span>
+                                Factura ${d.facturaNumero}
+                            </span>`;
+                        } else {
+                            acciones += `<button class="btn-facturar" onclick="FacturasModule.emitirFactura('${d.id}')">
+                                <span class="material-symbols-rounded">receipt_long</span> Facturar
+                            </button>`;
+                        }
                     }
 
                     filas += `
