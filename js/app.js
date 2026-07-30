@@ -125,16 +125,27 @@ document.addEventListener('DOMContentLoaded', () => {
             AuthModule.applyRolePermissions();
             try {
                 UIModule.updateDateDisplay();
+
+                // Asegurar que solo panel-inicio sea visible al cargar
+                contentSections.forEach(sec => {
+                    sec.classList.remove('active');
+                    sec.classList.add('hidden');
+                });
+                const panelInicio = document.getElementById('panel-inicio');
+                if (panelInicio) {
+                    panelInicio.classList.remove('hidden');
+                    panelInicio.classList.add('active');
+                }
+
                 UIModule.renderDashboardStats();
-                UIModule.renderMesas();
-                
-                // Actualizar info del usuario
+
+                // Actualizar badge de rol
                 const roleBadge = document.getElementById('user-role-badge');
                 if (roleBadge) {
                     roleBadge.textContent = session.rol;
                     roleBadge.className = 'role-badge role-' + session.rol;
                 }
-                
+
             } catch (err) {
                 console.error('Error al cargar UI:', err);
             }
@@ -175,15 +186,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Navegación entre paneles
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
+            // Desactivar todos
             navItems.forEach(nav => nav.classList.remove('active'));
-            contentSections.forEach(sec => sec.classList.remove('active'));
+            contentSections.forEach(sec => {
+                sec.classList.remove('active');
+                sec.classList.add('hidden');     // ocultar todos
+            });
 
+            // Activar el seleccionado
             const targetBtn = e.currentTarget;
             targetBtn.classList.add('active');
 
             const targetId = targetBtn.getAttribute('data-target');
             const section  = document.getElementById(targetId);
-            if (section) section.classList.add('active');
+            if (section) {
+                section.classList.remove('hidden');  // mostrar
+                section.classList.add('active');
+            }
 
             cerrarSidebar();
 

@@ -95,7 +95,8 @@ h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
 /* ── Utilidades ─────────────────────────────────────── */
-.hidden { display: none !important; }
+/* .hidden es sobreescrita por .panel-section.active en el navegador */
+.hidden { display: none; }
 
 /* ═══════════════════════════════════════════════════
    VISTA LOGIN
