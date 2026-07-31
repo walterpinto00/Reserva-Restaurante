@@ -57,9 +57,27 @@ function validarReserva() {
     } else if (comensales === '' || comensales < 1) {
         alert('❌ Indica al menos 1 comensal');
         return false;
-    } else {
-        return true;
     }
+
+    // ── Nueva Validación de Sobreventa ──
+    try {
+        const db = StorageModule.getDB();
+        const reservaExistente = db.reservas.find(r => 
+            r.mesaId === mesa && 
+            r.fecha === fecha && 
+            r.hora === hora && 
+            (r.estado === 'pendiente' || r.estado === 'confirmada')
+        );
+
+        if (reservaExistente) {
+            alert('❌ ERROR: Esta mesa ya está reservada para esa misma fecha y hora.');
+            return false;
+        }
+    } catch (err) {
+        console.warn("No se pudo validar la sobreventa: ", err);
+    }
+
+    return true;
 }
 
 // Valida un correo electrónico (mejorado respecto al básico de solo @)
