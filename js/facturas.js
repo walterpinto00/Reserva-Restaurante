@@ -6,7 +6,7 @@ const FacturasModule = {
     // URL del servidor proxy local
     PROXY_URL: 'http://localhost:4000',
 
-    // ── Verificar que el servidor proxy está activo ──────────────────────────
+    // ── Verificar que el servidor proxy está activo y...
     async verificarServidor() {
         try {
             const res = await fetch(`${this.PROXY_URL}/api/ping`, { signal: AbortSignal.timeout(3000) });
@@ -158,9 +158,16 @@ const FacturasModule = {
                         <span class="factura-label">PDF</span>
                         <a href="${data.pdf_url}" target="_blank" class="btn-modal-save factura-pdf-btn">
                             <span class="material-symbols-rounded">picture_as_pdf</span>
-                            Descargar PDF
+                            Ver PDF Online
                         </a>
                     </div>` : ''}
+                    <div class="factura-row">
+                        <span class="factura-label">Recibo</span>
+                        <button type="button" class="btn-modal-save factura-pdf-btn" onclick="FacturaModule.generarPDFLocal('${data.numero || 'SIMULADO'}', '${data.cufe || ''}')" style="background: linear-gradient(135deg, var(--accent), var(--danger));">
+                            <span class="material-symbols-rounded">download</span>
+                            Descargar PDF Local
+                        </button>
+                    </div>
                     ${data.qr ? `
                     <div class="factura-qr">
                         <img src="data:image/png;base64,${data.qr}" alt="QR Factura DIAN" />
@@ -170,5 +177,53 @@ const FacturasModule = {
             </div>`;
 
         document.body.appendChild(modal);
+    },
+
+    // ── Función para generar PDF en el cliente (Opción 2) ──────────────────
+    generarPDFLocal(numero, cufe) {
+        if (!window.jspdf) {
+            alert("La librería para generar PDFs aún está cargando o no se pudo cargar.");
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ format: 'a5' }); // Formato tipo ticket/recibo
+        
+        doc.setFillColor(15, 15, 18); // Color de fondo oscuro (Obsidian)
+        doc.rect(0, 0, 148, 210, 'F');
+        
+        doc.setTextColor(212, 175, 55); // Color texto dorado
+        doc.setFontSize(22);
+        doc.setFont("helvetica", "bold");
+        doc.text("ReservaRest", 74, 20, { align: "center" });
+        
+        doc.setTextColor(200, 200, 200);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("Factura Electrónica de Venta", 74, 28, { align: "center" });
+        
+        doc.setDrawColor(212, 175, 55);
+        doc.setLineWidth(0.5);
+        doc.line(10, 35, 138, 35);
+        
+        doc.setTextColor(255, 255, 255);
+        doc.text(`No. Factura: ${numero}`, 10, 45);
+        doc.text(`Fecha: ${new Date().toLocaleString()}`, 10, 52);
+        
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`CUFE: ${cufe.substring(0, 40)}...`, 10, 60);
+        
+        doc.line(10, 65, 138, 65);
+        
+        doc.setFontSize(14);
+        doc.setTextColor(212, 175, 55);
+        doc.text("Total Aprobado", 74, 85, { align: "center" });
+        
+        doc.setFontSize(12);
+        doc.setTextColor(100, 255, 100);
+        doc.text("✅ ÉXITO - PAGADO", 74, 95, { align: "center" });
+        
+        doc.save(`Factura_${numero}.pdf`);
     }
 };

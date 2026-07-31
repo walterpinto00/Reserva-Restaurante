@@ -247,11 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const formPedido  = document.getElementById('form-pedido');
     const selPedMesa  = document.getElementById('ped-mesa');
     const selPedPlato = document.getElementById('ped-plato');
+    let listaPlatosTemporales = [];
 
     document.addEventListener('abrirModalPedido', () => {
         if (!modalPedido) return;
         formPedido.reset();
         document.getElementById('modal-pedido-error').textContent = '';
+        listaPlatosTemporales = [];
+        renderListaPlatosTemporales();
 
         const db = StorageModule.getDB();
         selPedMesa.innerHTML  = '<option value="">Seleccionar mesa...</option>';
@@ -262,27 +265,110 @@ document.addEventListener('DOMContentLoaded', () => {
         modalPedido.classList.remove('hidden');
     });
 
-    const cerrarModalPedido = () => modalPedido.classList.add('hidden');
+    const cerrarModalPedido = () => {
+        modalPedido.classList.add('hidden');
+        listaPlatosTemporales = [];
+    };
+
     const btnPedCloseX = document.getElementById('modal-pedido-close-x');
     const btnPedCancel = document.getElementById('modal-pedido-cancel');
     if (btnPedCloseX) btnPedCloseX.addEventListener('click', cerrarModalPedido);
     if (btnPedCancel) btnPedCancel.addEventListener('click', cerrarModalPedido);
 
-    if (formPedido) {
-        formPedido.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const mesaId   = selPedMesa.value;
+    // Botón para agregar plato a la lista temporal
+    const btnAddPlato = document.getElementById('btn-add-plato-lista');
+    if (btnAddPlato) {
+        btnAddPlato.addEventListener('click', () => {
             const platoId  = selPedPlato.value;
-            const cantidad = parseInt(document.getElementById('ped-cantidad').value, 10);
+            const cantidad = document.getElementById('ped-cantidad').value;
+            const notas = document.getElementById('ped-notas').value.trim();
+            const errorMsg = document.getElementById('modal-pedido-error');
+            
+            errorMsg.textContent = '';
 
-            if (!mesaId || !platoId || cantidad < 1) {
-                document.getElementById('modal-pedido-error').textContent = '⚠️ Selecciona mesa, plato y cantidad válida.';
+            if (!validarPlatoIndividual(platoId, cantidad)) {
                 return;
             }
 
             const db = StorageModule.getDB();
-            const notas = document.getElementById('ped-notas') ? document.getElementById('ped-notas').value.trim() : '';
-            db.pedidos.push({ id: 'p' + Date.now(), mesaId, platoId, cantidad, estado: 'pendiente', notas });
+            const platoObj = db.platos.find(p => p.id === platoId);
+            
+            listaPlatosTemporales.push({
+                platoId: platoId,
+                nombrePlato: platoObj.nombre,
+                cantidad: parseInt(cantidad, 10),
+                notas: notas
+            });
+
+            // Limpiar inputs del plato para el siguiente
+            selPedPlato.value = '';
+            document.getElementById('ped-cantidad').value = '1';
+            document.getElementById('ped-notas').value = '';
+            
+            renderListaPlatosTemporales();
+        });
+    }
+
+    // Renderizar la lista temporal en el modal
+    function renderListaPlatosTemporales() {
+        const container = document.getElementById('lista-platos-pedido');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        if (listaPlatosTemporales.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); font-size: 12px; text-align: center;">No has agregado ningún plato a la comanda aún.</p>';
+            return;
+        }
+
+        listaPlatosTemporales.forEach((item, index) => {
+            container.innerHTML += `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
+                    <div>
+                        <strong style="color: var(--primary);">${item.cantidad}x</strong> ${item.nombrePlato}
+                        ${item.notas ? `<br><small style="color: var(--text-muted);">Notas: ${item.notas}</small>` : ''}
+                    </div>
+                    <button type="button" onclick="window.eliminarPlatoTemporal(${index})" style="background:none; border:none; color:var(--danger); cursor:pointer;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">delete</span>
+                    </button>
+                </div>
+            `;
+        });
+    }
+
+    // Función global para que el botón generado en string funcione
+    window.eliminarPlatoTemporal = function(index) {
+        listaPlatosTemporales.splice(index, 1);
+        renderListaPlatosTemporales();
+    };
+
+    if (formPedido) {
+        formPedido.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const errorMsg = document.getElementById('modal-pedido-error');
+            errorMsg.textContent = '';
+            
+            const mesaId = selPedMesa.value;
+
+            const errorValidacion = validarComandaFinal(mesaId, listaPlatosTemporales.length);
+            if (errorValidacion) {
+                errorMsg.textContent = errorValidacion;
+                return;
+            }
+
+            const db = StorageModule.getDB();
+            
+            // Guardar todos los platos de la lista
+            listaPlatosTemporales.forEach(item => {
+                db.pedidos.push({ 
+                    id: 'p' + Date.now() + Math.floor(Math.random() * 1000), 
+                    mesaId: mesaId, 
+                    platoId: item.platoId, 
+                    cantidad: item.cantidad, 
+                    estado: 'pendiente', 
+                    notas: item.notas 
+                });
+            });
+
             StorageModule.saveDB(db);
             cerrarModalPedido();
             UIModule.renderPedidos();

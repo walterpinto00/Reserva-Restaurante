@@ -98,3 +98,36 @@ function validarEmail() {
         alert('✅ Correo válido (frontend)');
     }
 }
+
+// =====================================================
+// NUEVAS VALIDACIONES (MULTIPLATO Y COMANDAS)
+// =====================================================
+
+// Valida un plato individual antes de agregarlo a la lista temporal
+function validarPlatoIndividual(platoId, cantidad) {
+    if (!platoId || platoId === "") {
+        alert("❌ Debes seleccionar un plato de la lista.");
+        return false;
+    }
+    
+    const cant = parseInt(cantidad, 10);
+    if (isNaN(cant) || cant < 1) {
+        alert("❌ La cantidad debe ser al menos 1.");
+        return false;
+    }
+    
+    return true;
+}
+
+// Valida que la comanda final (el conjunto de platos) esté correcta para la mesa
+function validarComandaFinal(mesaId, cantidadPlatosEnLista) {
+    if (!mesaId || mesaId === "") {
+        return "❌ Error: Debes seleccionar una mesa a la que asignarle los platos.";
+    }
+
+    if (cantidadPlatosEnLista === 0) {
+        return "❌ Error: La comanda está vacía. Agrega al menos un plato a la lista antes de guardar.";
+    }
+
+    return null;
+}

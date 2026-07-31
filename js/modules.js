@@ -21,25 +21,33 @@ const UIModule = {
             const mesasOcupadas = db.mesas.filter(m => m.estado === 'ocupada').length;
 
             container.innerHTML = `
-                <div class="stat-card glass-panel animate-fade-up delay-1">
-                    <div class="stat-icon"><span class="material-symbols-rounded">edit_calendar</span></div>
+                <div class="stat-card glass-panel blue animate-fade-up delay-1">
+                    <div class="stat-header">
+                        <div class="stat-title">Reservas Activas</div>
+                        <div class="stat-icon"><span class="material-symbols-rounded">book_online</span></div>
+                    </div>
                     <div class="stat-value">${db.reservas.length}</div>
-                    <div class="stat-label">Reservas Activas</div>
                 </div>
-                <div class="stat-card glass-panel animate-fade-up delay-2">
-                    <div class="stat-icon"><span class="material-symbols-rounded">skillet</span></div>
+                <div class="stat-card glass-panel purple animate-fade-up delay-2">
+                    <div class="stat-header">
+                        <div class="stat-title">Platos en Cola</div>
+                        <div class="stat-icon"><span class="material-symbols-rounded">restaurant</span></div>
+                    </div>
                     <div class="stat-value">${db.pedidos.length}</div>
-                    <div class="stat-label">Platos en Cola</div>
                 </div>
-                <div class="stat-card glass-panel animate-fade-up delay-3">
-                    <div class="stat-icon"><span class="material-symbols-rounded">moped</span></div>
+                <div class="stat-card glass-panel orange animate-fade-up delay-3">
+                    <div class="stat-header">
+                        <div class="stat-title">Despachos</div>
+                        <div class="stat-icon"><span class="material-symbols-rounded">delivery_dining</span></div>
+                    </div>
                     <div class="stat-value">${db.despachos.length}</div>
-                    <div class="stat-label">Despachos</div>
                 </div>
-                <div class="stat-card glass-panel animate-fade-up delay-4">
-                    <div class="stat-icon"><span class="material-symbols-rounded">table_bar</span></div>
+                <div class="stat-card glass-panel green animate-fade-up delay-4">
+                    <div class="stat-header">
+                        <div class="stat-title">Mesas Ocupadas</div>
+                        <div class="stat-icon"><span class="material-symbols-rounded">table_restaurant</span></div>
+                    </div>
                     <div class="stat-value">${mesasOcupadas}</div>
-                    <div class="stat-label">Mesas Ocupadas</div>
                 </div>
             `;
         } catch (err) {
@@ -187,8 +195,8 @@ const UIModule = {
             const btnNueva = document.getElementById('btn-nueva-reserva');
             if (btnNueva) {
                 btnNueva.addEventListener('click', () => {
-                    const modal = document.getElementById('modal-reserva');
-                    if (modal) modal.classList.remove('hidden');
+                    // Disparar evento global que app.js escucha para llenar los selects
+                    document.dispatchEvent(new CustomEvent('abrirModalReserva'));
                 });
             }
         } catch (err) {
