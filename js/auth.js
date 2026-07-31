@@ -208,16 +208,30 @@ const AuthModule = {
         }
     },
 
-    // Inicia un contador para cerrar la sesión a los 3 minutos
+    // Inicia un contador para cerrar la sesión a los 3 minutos de INACTIVIDAD
     _iniciarTemporizadorExpiracion(tiempoRestante) {
-        if (sessionTimer) clearTimeout(sessionTimer);
+        const TIEMPO_MAXIMO_MS = 3 * 60 * 1000;
         
-        sessionTimer = setTimeout(() => {
-            alert("Tu sesión ha expirado por inactividad (3 minutos).");
-            this.logout().then(() => {
-                location.reload();
-            });
-        }, tiempoRestante > 0 ? tiempoRestante : 0);
+        const resetTimer = () => {
+            if (sessionTimer) clearTimeout(sessionTimer);
+            sessionTimer = setTimeout(() => {
+                alert("Tu sesión ha expirado por inactividad (3 minutos sin hacer nada).");
+                this.logout().then(() => {
+                    location.reload();
+                });
+            }, TIEMPO_MAXIMO_MS);
+        };
+
+        // Escuchar eventos de interacción del usuario para reiniciar el reloj
+        if (!window.sessionListenersAttached) {
+            window.addEventListener('mousemove', resetTimer);
+            window.addEventListener('keydown', resetTimer);
+            window.addEventListener('click', resetTimer);
+            window.sessionListenersAttached = true;
+        }
+
+        // Iniciar el reloj la primera vez
+        resetTimer();
     },
 
     // Mostrar nombre/rol y ocultar menús según el rol del usuario
