@@ -257,6 +257,8 @@
                             <option value="">Seleccionar mesa...</option>
                         </select>
                     </div>
+                    
+                    <!-- Formulario de plato individual -->
                     <div class="form-group">
                         <label for="ped-plato">Plato *</label>
                         <select id="ped-plato" required>
@@ -269,15 +271,27 @@
                     </div>
                     <div class="form-group form-group--full">
                         <label for="ped-notas">Notas / Descripciones</label>
-                        <textarea id="ped-notas" rows="2" placeholder="Ej: Sin salsa rosada, bien asado..."></textarea>
+                        <textarea id="ped-notas" rows="1" placeholder="Ej: Sin salsa rosada..."></textarea>
+                    </div>
+                    
+                    <div class="form-group form-group--full" style="text-align: right; margin-top: -10px;">
+                        <button type="button" id="btn-add-plato-lista" class="btn-secondary" style="padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--primary); color: var(--primary); background: transparent; cursor: pointer;">
+                            <span class="material-symbols-rounded" style="vertical-align: middle; font-size: 18px;">add</span> Agregar Plato
+                        </button>
                     </div>
                 </div>
+
+                <!-- Lista temporal de platos -->
+                <div id="lista-platos-pedido" class="lista-temporal" style="margin-top: 16px; border-top: 1px solid var(--glass-border); padding-top: 16px;">
+                    <!-- Aquí se inyectan los platos agregados -->
+                </div>
+
                 <div id="modal-pedido-error" class="modal-error-msg"></div>
                 <div class="modal-actions">
                     <button type="button" id="modal-pedido-cancel" class="btn-modal-cancel">Cancelar</button>
                     <button type="submit" class="btn-modal-save">
                         <span class="material-symbols-rounded">check_circle</span>
-                        Guardar Pedido
+                        Guardar Comanda Final
                     </button>
                 </div>
             </form>
