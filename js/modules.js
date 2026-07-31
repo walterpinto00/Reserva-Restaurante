@@ -139,6 +139,11 @@ const UIModule = {
                                     ${estadoClass.toUpperCase()}
                                 </span>
                             </td>
+                            <td>
+                                <button class="btn-cancel-reserva" onclick="UIModule.cancelarReserva('${r.id}')" title="Cancelar Reserva">
+                                    <span class="material-symbols-rounded">close</span>
+                                </button>
+                            </td>
                         </tr>`;
                 });
             }
@@ -167,6 +172,7 @@ const UIModule = {
                                     <th>HORA</th>
                                     <th>COMENSALES</th>
                                     <th>ESTADO</th>
+                                    <th>ACCIONES</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -181,12 +187,29 @@ const UIModule = {
             const btnNueva = document.getElementById('btn-nueva-reserva');
             if (btnNueva) {
                 btnNueva.addEventListener('click', () => {
-                    // Disparar evento global que app.js escucha
-                    document.dispatchEvent(new CustomEvent('abrirModalReserva'));
+                    const modal = document.getElementById('modal-reserva');
+                    if (modal) modal.classList.remove('hidden');
                 });
             }
         } catch (err) {
             console.error('Error al renderizar reservas:', err);
+        }
+    },
+
+    cancelarReserva(id) {
+        if (!confirm('¿Estás seguro de que deseas eliminar esta reserva?')) return;
+        try {
+            const db = StorageModule.getDB();
+            // Eliminamos la reserva del arreglo
+            db.reservas = db.reservas.filter(r => r.id !== id);
+            StorageModule.saveDB(db);
+            
+            // Re-renderizar la interfaz
+            this.renderReservas();
+            this.renderMesas();
+            this.renderDashboardStats();
+        } catch (err) {
+            console.error('Error al cancelar reserva:', err);
         }
     },
 
