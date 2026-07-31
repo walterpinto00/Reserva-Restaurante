@@ -55,9 +55,28 @@ const UIModule = {
             const db = StorageModule.getDB();
             container.innerHTML = '';
 
+            // Obtener fecha actual en formato YYYY-MM-DD ajustada a zona local
+            const hoy = new Date();
+            const fechaHoyLocal = new Date(hoy.getTime() - (hoy.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
             db.mesas.forEach((mesa, index) => {
-                const estadoClass = mesa.estado === 'disponible' ? 'disponible'
-                    : mesa.estado === 'ocupada' ? 'ocupada' : 'reservada';
+                let estadoCalculado = mesa.estado; // Estado base de la DB
+
+                // Si la mesa figura como disponible, verificamos si tiene reservas para el día de hoy
+                if (estadoCalculado === 'disponible') {
+                    const tieneReservaHoy = db.reservas.some(r => 
+                        r.mesaId === mesa.id && 
+                        r.fecha === fechaHoyLocal && 
+                        (r.estado === 'pendiente' || r.estado === 'confirmada')
+                    );
+                    
+                    if (tieneReservaHoy) {
+                        estadoCalculado = 'reservada';
+                    }
+                }
+
+                const estadoClass = estadoCalculado === 'disponible' ? 'disponible'
+                    : estadoCalculado === 'ocupada' ? 'ocupada' : 'reservada';
 
                 container.innerHTML += `
                     <div class="mesa-card glass-panel stagger-item" style="animation-delay: ${index * 0.05}s">
@@ -68,7 +87,7 @@ const UIModule = {
                         <p class="mesa-zona">${mesa.zona}</p>
                         <p class="mesa-cap">${mesa.capacidad} comensales</p>
                         <span class="badge-status ${estadoClass}">
-                            ${mesa.estado.charAt(0).toUpperCase() + mesa.estado.slice(1)}
+                            ${estadoCalculado.charAt(0).toUpperCase() + estadoCalculado.slice(1)}
                         </span>
                     </div>
                 `;
