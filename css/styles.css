@@ -539,6 +539,25 @@ body::after {
 .factura-qr { margin-top: 24px; text-align: center; padding: 16px; background: rgba(255,255,255,0.05); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.1); }
 .factura-qr img { width: 140px; height: 140px; border-radius: 8px; }
 
+/* Botón Cancelar Reserva (La X) */
+.btn-cancel-reserva {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-cancel-reserva:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+    transform: scale(1.1) rotate(90deg);
+}
+
 /* ═══════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════ */
