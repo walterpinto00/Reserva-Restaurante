@@ -21,22 +21,22 @@ const UIModule = {
             const mesasOcupadas = db.mesas.filter(m => m.estado === 'ocupada').length;
 
             container.innerHTML = `
-                <div class="stat-card glass-panel blue stagger-item" style="animation-delay: 0s">
+                <div class="stat-card glass-panel animate-fade-up delay-1">
                     <div class="stat-icon"><span class="material-symbols-rounded">edit_calendar</span></div>
                     <div class="stat-value">${db.reservas.length}</div>
                     <div class="stat-label">Reservas Activas</div>
                 </div>
-                <div class="stat-card glass-panel purple stagger-item" style="animation-delay: 0.1s">
+                <div class="stat-card glass-panel animate-fade-up delay-2">
                     <div class="stat-icon"><span class="material-symbols-rounded">skillet</span></div>
                     <div class="stat-value">${db.pedidos.length}</div>
                     <div class="stat-label">Platos en Cola</div>
                 </div>
-                <div class="stat-card glass-panel cyan stagger-item" style="animation-delay: 0.2s">
+                <div class="stat-card glass-panel animate-fade-up delay-3">
                     <div class="stat-icon"><span class="material-symbols-rounded">moped</span></div>
                     <div class="stat-value">${db.despachos.length}</div>
                     <div class="stat-label">Despachos</div>
                 </div>
-                <div class="stat-card glass-panel green stagger-item" style="animation-delay: 0.3s">
+                <div class="stat-card glass-panel animate-fade-up delay-4">
                     <div class="stat-icon"><span class="material-symbols-rounded">table_bar</span></div>
                     <div class="stat-value">${mesasOcupadas}</div>
                     <div class="stat-label">Mesas Ocupadas</div>

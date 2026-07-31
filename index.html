@@ -12,63 +12,66 @@
 <body>
 
     <!-- ═══════════════ VISTA LOGIN ═══════════════ -->
-    <div id="view-login" class="login-container active">
-        <!-- Fondo con grid sutil -->
-        <div class="login-grid-bg"></div>
+    <div id="view-login" class="view-section active">
+        <div class="login-container animate-fade-up">
+            <!-- Fondo con grid sutil -->
+            <div class="login-grid-bg"></div>
 
-        <div class="login-box glass-panel">
-            <div class="login-header">
-                <div class="icon-glow">
-                    <span class="material-symbols-rounded">restaurant</span>
-                </div>
-                <h1>ReservaRest</h1>
-                <p>Plataforma de Gestión Gastronómica</p>
-            </div>
-
-            <div class="login-divider">Acceso al sistema</div>
-
-            <div class="login-form">
-                <div class="form-group">
-                    <span class="material-symbols-rounded">person</span>
-                    <input type="text" id="login-user" class="input-glass" placeholder="Nombre de usuario" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <span class="material-symbols-rounded">lock</span>
-                    <input type="password" id="login-pass" class="input-glass" placeholder="Contraseña">
-                </div>
-                
-                <!-- CAPTCHA Section (Google reCAPTCHA v2) -->
-                <div class="captcha-container" style="background:transparent; border:none; padding:0;">
-                    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                    <div class="g-recaptcha" data-sitekey="6Lf4Sm0tAAAAAED0p7M0WnAV_Nl_XXk7g3IKitDV" data-theme="dark"></div>
+            <div class="login-box glass-panel">
+                <div class="login-header">
+                    <div class="icon-glow">
+                        <span class="material-symbols-rounded">restaurant</span>
+                    </div>
+                    <h1>ReservaRest</h1>
+                    <p>Plataforma de Gestión Gastronómica</p>
                 </div>
 
-                <div id="login-error" class="error-msg"></div>
+                <div class="login-divider">Acceso al sistema</div>
 
-                <button id="btn-login" class="btn-cyber">
-                    Iniciar Sesión
-                </button>
-            </div>
+                <div class="login-form">
+                    <div class="form-group">
+                        <span class="material-symbols-rounded">person</span>
+                        <input type="text" id="login-user" class="input-glass" placeholder="Nombre de usuario" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <span class="material-symbols-rounded">lock</span>
+                        <input type="password" id="login-pass" class="input-glass" placeholder="Contraseña">
+                    </div>
+                    
+                    <!-- CAPTCHA Section (Google reCAPTCHA v2) -->
+                    <div class="captcha-container" style="background:transparent; border:none; padding:0;">
+                        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                        <div class="g-recaptcha" data-sitekey="6Lf4Sm0tAAAAAED0p7M0WnAV_Nl_XXk7g3IKitDV" data-theme="dark"></div>
+                    </div>
 
-            <div class="login-demo-info">
-                <p>Credenciales de prueba</p>
-                <div class="demo-tags">
-                    <span>admin / admin123</span>
-                    <span>mesero / mesero123</span>
-                    <span>cocina / cocina123</span>
-                    <span>despacho / despacho123</span>
+                    <div id="login-error" class="error-msg"></div>
+
+                    <button id="btn-login" class="btn-cyber">
+                        Iniciar Sesión
+                    </button>
+                </div>
+
+                <div class="login-demo-info">
+                    <p>Credenciales de prueba</p>
+                    <div class="demo-tags">
+                        <span>admin / admin123</span>
+                        <span>mesero / mesero123</span>
+                        <span>cocina / cocina123</span>
+                        <span>despacho / despacho123</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ═══════════════ VISTA DASHBOARD ═══════════════ -->
-    <div id="view-dashboard" class="dashboard-container hidden">
+    <div id="view-dashboard" class="view-section hidden">
+        <div class="dashboard-container">
 
         <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
         <!-- Menú Lateral -->
-        <aside class="sidebar glass-panel" id="sidebar">
+        <aside class="sidebar animate-fade-up delay-1 glass-panel" id="sidebar">
             <div class="brand">
                 <div class="brand-icon">
                     <span class="material-symbols-rounded">restaurant_menu</span>
@@ -113,7 +116,7 @@
             </div>
         </aside>
 
-        <div class="main-wrapper">
+        <div class="main-wrapper animate-fade-up delay-2">
             <!-- Barra Superior -->
             <header class="topbar">
                 <div class="topbar-left">
