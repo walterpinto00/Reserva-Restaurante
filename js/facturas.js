@@ -156,7 +156,7 @@ const FacturasModule = {
                     ${data.pdf_url ? `
                     <div class="factura-row">
                         <span class="factura-label">PDF</span>
-                        <a href="${data.pdf_url}" target="_blank" class="btn-modal-save factura-pdf-btn">
+                        <a href="${data.pdf_url}" target="_blank" rel="noopener noreferrer" class="btn-modal-save factura-pdf-btn">
                             <span class="material-symbols-rounded">picture_as_pdf</span>
                             Ver PDF Online
                         </a>
@@ -170,7 +170,7 @@ const FacturasModule = {
                     </div>
                     ${data.qr ? `
                     <div class="factura-qr">
-                        <img src="data:image/png;base64,${data.qr}" alt="QR Factura DIAN" />
+                        <img src="data:image/png;base64,${data.qr}" alt="QR Factura DIAN" width="150" height="150" />
                         <small>Código QR — DIAN</small>
                     </div>` : ''}
                 </div>
