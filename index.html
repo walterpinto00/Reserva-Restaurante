@@ -6,6 +6,14 @@
     <meta name="description" content="ReservaRest: Sistema de gestión de reservas, mesas, pedidos y despachos para restaurantes. Proyecto ADSO SENA.">
     <meta name="theme-color" content="#030712">
     <title>ReservaRest | Sistema ADSO</title>
+    
+    <!-- Favicon para evitar error 404 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
+    
+    <!-- Preconnect para Google Fonts (Mejora Rendimiento) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 </head>
@@ -343,12 +351,12 @@
     </div>
 
     <!-- jsPDF para generación de facturas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 
-    <script src="js/seguridad.js"></script>
-    <script src="js/validaciones.js"></script>
-    <script src="js/facturas.js"></script>
-    <script src="js/modules.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/seguridad.js" defer></script>
+    <script src="js/validaciones.js" defer></script>
+    <script src="js/facturas.js" defer></script>
+    <script src="js/modules.js" defer></script>
+    <script src="js/app.js" defer></script>
 </body>
 </html>
